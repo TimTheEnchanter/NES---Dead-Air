@@ -1,0 +1,10 @@
+import fs from 'fs';
+const {NES}=await import(process.env.HOME+'/tools/jsnes/src/index.js').catch(async()=>{const m=await import(process.env.HOME+'/tools/jsnes/src/nes.js');return {NES:m.default||m.NES}});
+const nes=new NES({onFrame(){},onAudioSample(){}});
+nes.loadROM(fs.readFileSync(process.argv[2]).toString('binary'));
+for(let i=0;i<40;i++) nes.frame();
+const h={};const orig=nes.cpu.emulate.bind(nes.cpu);
+nes.cpu.emulate=function(){const pc=(this.REG_PCL??0);h[this.REG_PC+1]=(h[this.REG_PC+1]||0)+1;return orig()};
+for(let i=0;i<10;i++) nes.frame();
+console.log(Object.entries(h).sort((a,b)=>b[1]-a[1]).slice(0,14).map(([a,n])=>(+a).toString(16)+':'+n).join(' '));
+console.log('zp',[...nes.cpu.mem.slice(0x48,0x7e)].map(v=>v.toString(16)).join(' '));

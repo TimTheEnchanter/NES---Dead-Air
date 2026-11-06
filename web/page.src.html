@@ -1,0 +1,146 @@
+<title>Dead Air</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Chakra+Petch:wght@500;700&family=IBM+Plex+Sans:wght@400;500&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<style>
+/* Layout: a console bench. The screen dominates; instruments and controls sit beside it, and stack on phones.
+   One deliberate look: moulded grey plastic with a dark inset band, in both host themes. */
+:root{
+  --chassis:#b8babd; --chassis-lo:#a2a5a9; --band:#23262b; --band-2:#31353b; --ink:#16181b;
+  --ink-soft:#42464c; --label:#c9ccd1; --signal:#c8202f; --lit:#ffb347; --screen:#000;
+  --display:"Chakra Petch","Trebuchet MS",sans-serif; --body:"IBM Plex Sans","Segoe UI",sans-serif; --mono:"IBM Plex Mono",ui-monospace,monospace;
+}
+html,body{height:100%}
+body{background:var(--chassis);color:var(--ink);font-family:var(--body);font-size:15px;line-height:1.5;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));padding-block:20px}
+.wrap{max-width:1040px;margin-inline:auto;display:grid;gap:16px}
+header{display:flex;flex-wrap:wrap;align-items:baseline;gap:4px 16px}
+h1{font-family:var(--display);font-weight:700;font-size:26px;letter-spacing:.02em;margin:0;text-wrap:balance}
+header p{margin:0;color:var(--ink-soft)}
+.bench{display:grid;grid-template-columns:minmax(0,1fr) 290px;gap:16px;background:var(--band);border-radius:6px;padding:14px;box-shadow:inset 0 2px 0 #0007,0 1px 0 #fff5}
+.screen{position:relative;background:var(--screen);min-width:0;display:flex;align-items:center;justify-content:center;overflow:hidden;border:0;padding:0;cursor:pointer}
+.screen:focus-visible,button:focus-visible,label.file:focus-within{outline:2px solid var(--lit);outline-offset:2px}
+canvas{display:block;width:100%;max-width:100%;aspect-ratio:256/240;image-rendering:pixelated}
+.hint{position:absolute;inset:auto 0 10px;text-align:center;color:#fff;font-family:var(--mono);font-size:12px;pointer-events:none}
+.side{display:grid;gap:14px;align-content:start;color:var(--label);min-width:0}
+.readout{display:grid;grid-template-columns:1fr 1fr;gap:10px 14px;margin:0}
+.readout div{min-width:0}
+dt{font-size:11px;letter-spacing:.09em;text-transform:uppercase;color:#9aa0a8}
+dd{margin:0;font-family:var(--mono);font-size:22px;color:var(--lit);font-variant-numeric:tabular-nums}
+.pad{display:grid;grid-template-columns:auto minmax(0,1fr);gap:10px;align-items:center;touch-action:none;user-select:none;-webkit-user-select:none}
+.dpad{display:grid;grid-template-columns:repeat(3,44px);grid-template-rows:repeat(3,44px)}
+.dpad button{background:var(--band-2);color:var(--label);border:1px solid #0009;border-radius:3px;font-size:14px;padding:0}
+.up{grid-area:1/2}.left{grid-area:2/1}.right{grid-area:2/3}.down{grid-area:3/2}
+.ab{display:flex;gap:8px;justify-content:flex-end}
+.ab div{display:grid;gap:3px;justify-items:center;font-size:11px;letter-spacing:.06em}
+.ab{align-items:flex-end}
+.ab button{width:44px;height:44px;border-radius:50%;background:var(--signal);color:#fff;border:0;font-family:var(--display);font-weight:700;font-size:18px;box-shadow:0 2px 0 #0008}
+.ab button.start{width:40px;height:30px;border-radius:3px;background:var(--band-2);color:var(--label);font-size:11px;box-shadow:none;border:1px solid #0009}
+button:active,button.on{filter:brightness(1.3)}
+.keys{font-size:13px;color:#aeb3ba;margin:0}
+kbd{font-family:var(--mono);font-size:12px;color:var(--label)}
+.tools{display:flex;flex-wrap:wrap;gap:8px}
+.tool,label.file{background:var(--band-2);color:var(--label);border:1px solid #0009;border-radius:3px;padding:7px 11px;font:500 13px var(--body);cursor:pointer}
+label.file input{position:absolute;opacity:0;width:1px;height:1px}
+.notes{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:16px 28px}
+.notes section{min-width:0}
+h2{font-family:var(--display);font-size:16px;font-weight:700;margin:0 0 4px}
+.notes p{margin:0 0 6px;max-width:62ch}
+table{border-collapse:collapse;font-family:var(--mono);font-size:13px;font-variant-numeric:tabular-nums}
+th,td{padding:2px 16px 2px 0;text-align:left;font-weight:400;border-bottom:1px solid var(--chassis-lo)}
+th{font-family:var(--body);font-weight:500}
+#result{font-family:var(--mono);font-size:13px;min-height:1.5em;color:var(--ink)}
+@media (max-width:760px){.bench{grid-template-columns:minmax(0,1fr)}.pad{grid-template-columns:auto 1fr}}
+</style>
+<div class="wrap">
+  <header><h1>Dead Air</h1><p>An NES wireframe space-combat game, running live in a browser emulator.</p></header>
+  <div class="bench">
+    <button class="screen" id="screen" aria-label="Game screen. Click to use the keyboard."><canvas id="c" width="256" height="240"></canvas><span class="hint" id="hint">Click here, then use the keyboard</span></button>
+    <div class="side">
+      <dl class="readout">
+        <div><dt>Frame rate</dt><dd id="fps">--</dd></div>
+        <div><dt>Late frames</dt><dd id="late">0</dd></div>
+        <div><dt>Speed</dt><dd id="speed">--</dd></div>
+        <div><dt>Tiles used</dt><dd id="tiles">--</dd></div>
+        <div><dt>Score</dt><dd id="score">0</dd></div>
+        <div><dt>Shields</dt><dd id="shields">3</dd></div>
+      </dl>
+      <div class="pad">
+        <div class="dpad">
+          <button class="up" data-b="4" aria-label="Nose up">▲</button><button class="left" data-b="6" aria-label="Turn left">◀</button>
+          <button class="right" data-b="7" aria-label="Turn right">▶</button><button class="down" data-b="5" aria-label="Nose down">▼</button>
+        </div>
+        <div class="ab"><div><button class="start" data-b="3" aria-label="Start">▶▮</button>Start</div><div><button data-b="1" aria-label="Hold for speed control">B</button>Speed</div><div><button data-b="0" aria-label="Fire or advance text">A</button>Fire</div></div>
+      </div>
+      <p class="keys"><kbd>Enter</kbd> starts. <kbd>Z</kbd> advances text and fires. <kbd>Arrows</kbd> steer and pick answers. Hold <kbd>X</kbd> with up or down to change speed.</p>
+      <div class="tools">
+        <button class="tool" id="flight">Run test flight</button>
+        <button class="tool" id="reset">Restart</button>
+        <button class="tool" id="sound" aria-pressed="false">Sound off</button>
+        <label class="file">Load .nes file<input type="file" id="file" accept=".nes"></label>
+      </div>
+    </div>
+  </div>
+  <div id="result" role="status"></div>
+  <div class="notes">
+    <section><h2>What the numbers mean</h2>
+      <p>Frame rate counts finished game frames against the console's 60 Hz clock, so it reflects how the ROM performs, not your computer. Late frames took more than two vblanks.</p>
+      <p>This emulator's timing differs from Mesen's, so its frame rate can read higher or lower, and it draws the picture one line lower. Use it to try the game and catch visible faults. Use Mesen or a real console for final timing.</p>
+    </section>
+    <section><h2>Mesen reference</h2><p>The missions ran at about 25 fps in scripted flights, with zero picture slips across the timing range. The carrier and freighter close-ups held at 20 fps or better. These numbers come from an emulator, not real hardware.</p></section>
+    <section><h2>How to play</h2><p>Start opens the campaign. Press Fire to advance the text, and use up or down to pick your answer.</p><p>Fly to the bright dot, which marks the nav point. If it sits at the side of the view, turn that way. Hold B and press up or down to change speed. Hale calls out what you find at each point. In Mission 1 you meet two scouts. In Mission 2 you meet scouts and then two big freighters, which take six hits. Keep turning to dodge bolts. When the radio says to take us home, follow the marker to the Vigil and fly close to land. A crash or a bolt costs a shield, but losing them all does not end the story. Your progress saves after each debrief.</p></section>
+    <section><h2>Sound</h2><p>Sound starts off because browsers need a click first. Choose Sound off to turn it on. Effects and the title music use the console's real sound channels.</p></section>
+    <section><h2>Credits</h2><p>Emulation by <a href="https://github.com/bfirsh/jsnes">jsnes</a> (Apache 2.0). Font from <a href="https://github.com/cc65/cc65">cc65</a> (zlib).</p></section>
+  </div>
+</div>
+<script>/*JSNES*/</script>
+<script>
+const ROM_B64="/*ROM*/";
+const $=id=>document.getElementById(id);
+const cv=$('c'),g=cv.getContext('2d'),img=g.createImageData(256,240),px=new Uint32Array(img.data.buffer);
+const TOP=0,HEIGHT=240;
+const RATE=48000,RING=1<<15,ring=new Float32Array(RING);let rd=0,wr=0,audio=null,soundOn=false;
+function sample(l,r){if(!soundOn)return;const n=(wr+1)&(RING-1);if(n!==rd){ring[wr]=(l+r)*.5;wr=n}}
+function startAudio(){const C=window.AudioContext||window.webkitAudioContext;audio=new C({sampleRate:RATE});
+  const node=audio.createScriptProcessor(2048,0,1);node.onaudioprocess=e=>{const o=e.outputBuffer.getChannelData(0);for(let i=0;i<o.length;i++){if(rd!==wr){o[i]=ring[rd];rd=(rd+1)&(RING-1)}else o[i]=0}};
+  node.connect(audio.destination)}
+let nes,rom,fb=null,last=null,script=null,tick=0,held=new Set(),user=new Set();
+function draw(){if(!fb)return;for(let y=0;y<HEIGHT;y++){const o=(y+TOP)*256,d=y*256;for(let x=0;x<256;x++)px[d+x]=0xff000000|fb[o+x]}g.putImageData(img,0,0)}
+const KEY='dead-air-save';let saveCopy=null;
+try{const v=localStorage.getItem(KEY);if(v)saveCopy=JSON.parse(v)}catch{}
+function restoreSave(){if(saveCopy)saveCopy.forEach((v,i)=>nes.cpu.mem[0x7F00+i]=v)}
+function keepSave(){const m=M();if(m[0x7F00]!==0x44||m[0x7F01]!==0x41)return;const c=[...m.slice(0x7F00,0x7F06)];
+  if(saveCopy&&c.every((v,i)=>v===saveCopy[i]))return;saveCopy=c;try{localStorage.setItem(KEY,JSON.stringify(c))}catch{}}
+function boot(bin){rom=bin;nes=new JSNES.NES({onFrame(b){fb=b},onAudioSample:sample,emulateSound:true,sampleRate:RATE});nes.loadROM(bin);restoreSave();tick=0;last=null;script=null;held=new Set();
+  $('result').textContent=''}
+function apply(want){for(const b of want)if(!held.has(b))nes.buttonDown(1,b);for(const b of held)if(!want.has(b))nes.buttonUp(1,b);held=want}
+function step(){tick++;let want=new Set(user);
+  if(script){want=new Set();const mode=M()[0x31E];
+    if(mode!==1&&script.t0===null){if(tick%30<2){want.add(0);want.add(3)}}
+    else{if(script.t0===null)script.t0=tick;const d=tick-script.t0;for(const[a,z,b]of script.keys)if(d>=a&&d<z)b.forEach(k=>want.add(k));if(d>=script.end)finish()}}
+  apply(want);nes.frame()}
+const M=()=>nes.cpu.mem,word=a=>M()[a]|M()[a+1]<<8;
+function stats(){const f=word(0x300),n=word(0x302);if(last&&n!==last.n){const dn=(n-last.n+65536)%65536;
+  if(dn>=30){$('fps').textContent=((f-last.f+65536)%65536*60/dn).toFixed(1);last={f,n}}}else if(!last)last={f,n};
+  $('late').textContent=M()[0x30A];$('speed').textContent=M()[0x32B];$('tiles').textContent=M()[0x304];keepSave();$('score').textContent=M()[0x30E];$('shields').textContent=M()[0x30F]}
+const A=0,B=1,LEFT=6,RIGHT=7,UP=4;
+function runFlight(){boot(rom);const f=word(0x300);script={end:800,start:{f:0,n:0},t0:null,keys:[[0,20,[B,UP]],[20,800,[RIGHT]],[80,800,[A]]]};$('result').textContent='Test flight running…'}
+function finish(){const f=word(0x300),n=word(0x302);$('result').textContent=`Test flight: ${f} frames in ${n} vblanks, ${(f*60/n).toFixed(1)} fps, ${M()[0x30A]} late, peak ${M()[0x305]} tiles, score ${M()[0x30E]}, hit by ${M()[0x313]} of ${M()[0x312]} enemy bolts.`;script=null}
+let acc=0,prev=null;
+function loop(t){if(prev===null)prev=t;acc+=Math.min(t-prev,100);prev=t;let ran=0;while(acc>=1000/60&&ran<4){step();acc-=1000/60;ran++}if(ran){draw();stats()}requestAnimationFrame(loop)}
+const KEYS={ArrowUp:4,ArrowDown:5,ArrowLeft:6,ArrowRight:7,KeyZ:0,KeyX:1,Enter:3,NumpadEnter:3};
+addEventListener('keydown',e=>{const b=KEYS[e.code];if(b===undefined)return;e.preventDefault();user.add(b);$('hint').hidden=true});
+addEventListener('keyup',e=>{const b=KEYS[e.code];if(b!==undefined){e.preventDefault();user.delete(b)}});
+addEventListener('blur',()=>user.clear());
+document.querySelectorAll('[data-b]').forEach(el=>{const b=+el.dataset.b;
+  const on=e=>{e.preventDefault();user.add(b);el.classList.add('on')},off=()=>{user.delete(b);el.classList.remove('on')};
+  el.addEventListener('pointerdown',on);['pointerup','pointercancel','pointerleave'].forEach(n=>el.addEventListener(n,off))});
+$('screen').addEventListener('click',()=>{$('hint').hidden=true;$('screen').focus()});
+$('reset').addEventListener('click',()=>boot(rom));
+$('flight').addEventListener('click',runFlight);
+$('sound').addEventListener('click',async()=>{soundOn=!soundOn;if(soundOn&&!audio)startAudio();if(audio)try{await (soundOn?audio.resume():audio.suspend())}catch{}
+  rd=wr=0;$('sound').textContent=soundOn?'Sound on':'Sound off';$('sound').setAttribute('aria-pressed',soundOn)});
+$('file').addEventListener('change',async e=>{const f=e.target.files[0];if(!f)return;const buf=new Uint8Array(await f.arrayBuffer());
+  if(buf[0]!==0x4E||buf[1]!==0x45||buf[2]!==0x53){$('result').textContent=`${f.name} is not an iNES ROM. Choose a .nes file.`;return}
+  let s='';for(const v of buf)s+=String.fromCharCode(v);boot(s);$('result').textContent=`Running ${f.name}.`});
+boot(atob(ROM_B64));requestAnimationFrame(loop);
+</script>

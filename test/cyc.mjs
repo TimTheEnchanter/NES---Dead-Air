@@ -1,0 +1,13 @@
+import fs from 'fs';
+const {NES}=await import(process.env.HOME+'/tools/jsnes/src/nes.js').then(m=>({NES:m.default||m.NES}));
+const nes=new NES({onFrame(){},onAudioSample(){}});
+nes.loadROM(fs.readFileSync(process.argv[2]).toString('binary'));
+const R=JSON.parse(fs.readFileSync('/tmp/rng.json'));let isr=0;
+let cyc=0,last=null,lastT=0;const tot={},cnt={};
+const orig=nes.cpu.emulate.bind(nes.cpu);
+nes.cpu.emulate=function(){const pc=this.REG_PC+1;const c=orig();if(R.some(r=>pc>=r[0]&&pc<r[1]))isr+=c;else cyc+=c;return c};
+const w=nes.mmap.write.bind(nes.mmap);
+nes.mmap.write=function(a,v){ if(a===0x4100){ if(last!==null){const k=last+'>'+v;tot[k]=(tot[k]||0)+cyc-lastT;cnt[k]=(cnt[k]||0)+1;} last=v;lastT=cyc;} return w(a,v)};
+for(let i=0;i<400;i++) nes.frame();
+for(const k in tot) console.log(k,'avg',Math.round(tot[k]/cnt[k]),'n',cnt[k]);
+console.log('isr cycles/frame',Math.round(isr/400));
