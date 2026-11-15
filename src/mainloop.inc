@@ -123,8 +123,8 @@ main:
 @xdone:
   ldx ship
   lda shipModel,x
-  cmp #ECHO_MODEL
-  bne :+
+  and #ECHO_MODEL|CONCORD_MODEL   ; ships drawn in the tint colour
+  beq :+
   jsr tint_mark
 :
   MARK 5

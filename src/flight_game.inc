@@ -967,6 +967,9 @@ miss:
   cpy #8
   bne :+
   lda #R_LANCERDN
+: cpy #CARRIER_MODEL
+  bne :+
+  lda #R_CARRIERDN
 : cpy #ECHO_MODEL
   bne :+
   lda #R_ECHODN
@@ -1478,9 +1481,11 @@ LOD_HI = 4               ; high byte of the view depth, so 1024 units
   beq :++
   cmp #ECHO_MODEL      ; the echo drone wears a scout's hull
   beq :++
+  cmp #CONCORD_MODEL   ; so do Concord fighters
+  beq :++
   cmp #8
-  bne :+
-  lda #0               ; lancer
+  bcc :+               ; 1-4: slab hulls
+  and #3               ; lancer hull; at scale 2 it is the Serrath carrier
   sta mShift
   lda #NV+NV2+NV3
   sta vFirst

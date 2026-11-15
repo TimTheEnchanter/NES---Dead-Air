@@ -38,6 +38,14 @@ Echo tint: `src/tint.inc`. The echo drone (`shipModel` 16, a scout hull) is draw
 
 Protecting: `protSlot` is the ship enemies attack and whose hits are counted (`prot_hits` in `src/mission3.inc`): Ren's shuttle in 4A, or the wreck in Mission 6, which stands in the Vigil's slot until the landing step brings the Vigil back (`vigil_home`). A defend step with freighter-byte $10 protects the wreck.
 
+Mission 7 (`src/mission4.inc`): Concord pilots (`shipModel` 32, scout hull, tinted; `tintTab` sets the tint colour per mission) are disabled at their last hit. Step kind 6 (sneak) places a picket in slot 2 at the nav point plus (count*8, hp*8); inside `WARN_R` Ren warns, inside `DETECT_R` two scouts launch and a spare fighter is lost. Kind 7 (finish) ends the mission without landing. Mode 3 flies with nobody on your wing.
+
+Finale (Mission 8): fight steps use the wait byte as a code: bit 7 makes slot 0 that model, fixed in place (the Serrath carrier is `shipModel` $0A, the lancer hull at scale 2); 1 skips the wave if the Concord patrol came; 2 drops one echo if you spared Teller. The Array is the slab hull at scale 3, standing on end in the Vigil's slot. The finale script is in bank 5 (`SCRIPT3`).
+
+Radio: text lives in bank 6 (`RADIO`). `radio_fetch` maps it for a moment, copies the line into `radioBuf`, and maps the flight bank back; the picture-bottom interrupt only reads RAM.
+
+Story tests: `STORYTARGET=<label> python3 story/gen_story.py` plus `-D STORYTEST=1 -D STORYF2=<flags>` builds a ROM that opens at that scene in bank 5.
+
 Picture timing: `test/slips.py` needs a `DEBUG` build. It finds the fixed marker line and counts frames where it is off its usual row (27) or missing. The clean range of `BUD_B` is about 4465-4500; 4485 is the setting.
 
 Spare fighters: story flag bits 5-7 count fighters lost (script op LOST); op SPARE prints how many remain of `SPARE_START`.

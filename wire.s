@@ -101,6 +101,8 @@ K_NEXT=125
 .include "src/tint.inc"
 .include "src/mission2.inc"
 .include "src/mission3.inc"
+.include "src/mission4.inc"
+.include "src/radio.inc"
 .include "src/draw.inc"
 .include "src/ai.inc"
 .include "src/mainloop.inc"

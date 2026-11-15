@@ -608,7 +608,7 @@ sayDirect:
   ldx radioT
   cpx #90
   bcs saySkip
-  sta radioReq
+  jmp radio_fetch
 saySkip:
   rts
 

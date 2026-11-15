@@ -15,6 +15,8 @@ S_LAND    = 2
 S_AMBUSH  = 3
 S_DEFEND  = 4            ; hold for the time limit; waves keep coming
 S_GUARD   = 5            ; one scout goes for the wingman, on a timer
+S_SNEAK   = 6            ; slip past a picket placed near the route
+S_FINISH  = 7            ; the mission ends here, no landing
 SHUTTLE_HP = 6
 SP_KIND   = 0
 SP_ARRIVE = 7
@@ -159,7 +161,10 @@ load_step:
   cmp #S_LAND
   bne :+
   jmp vigil_home       ; time to land: the Vigil is back in her slot
-: rts
+: cmp #S_SNEAK
+  bne :+
+  jmp sneak_place
+: jmp sneak_clear
 
 next_step:
   lda mStepL
@@ -538,7 +543,8 @@ spawnZH: .byte >500,>760
   lda mLimit+1
   cmp #3
   bcc :+
-  jmp spawn_step
+  jsr spawn_step       ; a new wave, of the same kind
+  jmp spawn_post
 : rts
 held:
   lda #0
@@ -612,6 +618,11 @@ calm:
   jmp waiting
 :
   ; flying to the point
+  jsr sneak_tick       ; pickets watch for you on a sneak step
+  lda mPhase
+  beq :+
+  rts
+:
   ldy #SP_KIND
   lda (spadP),y
   cmp #S_LAND
@@ -786,13 +797,23 @@ waiting:
   sta mLimit+1
   jmp spawn_behind
 :
+  ldy #SP_KIND
+  lda (spadP),y
+  cmp #S_SNEAK
+  beq waitDone         ; slipping past is its own reward
   ldy #SP_CLEAR
   lda (spadP),y
-  beq :+
+  beq waitDone
   ldx #0
   stx radioT
   jsr say_radio
-:
-  jmp next_step
+waitDone:
+  ldy #SP_KIND
+  lda (spadP),y
+  cmp #S_FINISH
+  bne :+
+  lda #1
+  jmp end_mission
+: jmp next_step
 .endproc
 .popseg

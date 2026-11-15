@@ -32,8 +32,15 @@ vigil_home:
 ; After setup: in an escort the shuttle is what you protect; in a wreck
 ; mission the wreck stands in the Vigil's slot until it is time to land.
 mission_extras:
+  ldx missionId
+  lda tintTab,x
+  sta tintColor
   lda missionMode
-  cmp #2
+  cmp #3
+  bne :+
+  lda #0               ; flying alone
+  sta alive+HALE
+: cmp #2
   bne :+
   lda #HALE
   sta protSlot
@@ -43,8 +50,28 @@ mission_extras:
   sta shuttleHP
 : ldx missionId
   lda wreckTab,x
-  beq :+
-  lda #<WRECK_X
+  beq :++
+  cmp #2
+  bne :+
+  ; the Array: a vast spire standing on end where the Vigil would be
+  lda #<ARRAY_X
+  sta shipPosL+VIGIL
+  lda #>ARRAY_X
+  sta shipPosH+VIGIL
+  lda #<ARRAY_Y
+  sta shipPosL+16+VIGIL
+  lda #>ARRAY_Y
+  sta shipPosH+16+VIGIL
+  lda #<ARRAY_Z
+  sta shipPosL+32+VIGIL
+  lda #>ARRAY_Z
+  sta shipPosH+32+VIGIL
+  lda #3
+  sta shipModel+VIGIL
+  lda #64
+  sta hPitch+VIGIL
+  rts
+: lda #<WRECK_X
   sta shipPosL+VIGIL
   lda #>WRECK_X
   sta shipPosH+VIGIL

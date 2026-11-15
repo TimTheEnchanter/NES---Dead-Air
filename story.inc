@@ -95,6 +95,7 @@ portMap:
   .byte 0,161,188,189,190,164,0,191,192,193,194,195,0,196,204,205,206,0,0,200,201,207,203,0,144,145,177,178,148,149,150,151,152,153,154,155
   .byte 0,208,209,210,131,0,0,211,212,213,214,0,0,215,216,217,218,0,0,219,220,207,221,0,144,145,177,178,148,149,150,151,152,153,222,223
   .byte 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0
+  .byte 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0
 portPal:
   .byte 7,39,55
   .byte 7,39,55
@@ -103,6 +104,7 @@ portPal:
   .byte 6,22,54
   .byte 6,22,54
   .byte 8,23,39
+  .byte 15,15,15
   .byte 15,15,15
 portName:
   .byte 72,65,76,69,32,32,32,32,32,32,32,32
@@ -113,6 +115,7 @@ portName:
   .byte 77,65,82,65,32,68,82,65,89,32,32,32
   .byte 82,69,78,32,79,75,65,70,79,82,32,32
   .byte 86,73,71,73,76,32,76,79,71,32,32,32
+  .byte 74,85,78,32,84,69,76,76,69,82,32,32
 .segment "ASSETS"
 storyRuns:
   .byte 32,78,9,67,86,83,32,86,73,71,73,76,32,99,8,1,5,5,5,5,5,5,2,32,108,17,1,5,5,5,5,5
@@ -136,6 +139,7 @@ locNames:
   .byte 32,70,76,73,71,72,84,32,68,69,67,75,32
   .byte 32,32,32,67,82,69,87,32,66,65,82,32,32
   .byte 32,32,86,73,71,73,76,32,76,79,71,32,32
+  .byte 32,32,84,72,69,32,65,82,82,65,89,32,32
 .segment "SCRIPT1"
 script:
 menu:
@@ -974,23 +978,438 @@ m6Ren:
   .byte 3
 m6Save:
   .byte 8,5
-m6End:
-  .byte 11,3
+m7Start:
+  .byte 18,32
+  .word scene7A
+  .byte 6
+  .word scene7B
+scene7A:
+  .byte 11,0
+  .byte 1,2
+  .byte "The records went out an",2
+  .byte "hour ago. Concord answered",2
+  .byte "faster than I expected.",2
+  .byte 3
+  .byte 1,3
+  .byte "A patrol is coming. To",2
+  .byte "them, this ship is a",2
+  .byte "deserter.",2
+  .byte 3
+  .byte 1,5
+  .byte "So they shoot first and",2
+  .byte "read later.",2
+  .byte 3
+  .byte 1,2
+  .byte "If they attack, you",2
+  .byte "disable them. Nobody kills",2
+  .byte "a Concord pilot today. Not",2
+  .byte "for me.",2
+  .byte 3
+  .byte 7,8
+  .word m7aWin,m7aLose
+m7aLose:
+  .byte 15
+  .byte 15
+  .byte 11,1
+  .byte 1,3
+  .byte "They have gone to report.",2
+  .byte "And two of our fighters",2
+  .byte "are scrap.",2
+  .byte 3
+  .byte 6
+  .word m7aAfter
+m7aWin:
+  .byte 17,64
+  .byte 11,1
+  .byte 1,2
+  .byte "They are standing down.",2
+  .byte "They will follow us to",2
+  .byte "Corvane, under guard.",2
+  .byte 3
+m7aAfter:
+  .byte 11,0
+  .byte 1,2
+  .byte "I gave them everything.",2
+  .byte "The orders, the retreat,",2
+  .byte "my name.",2
+  .byte 3
+  .byte 1,3
+  .byte "Dray, the flight group is",2
+  .byte "yours. I am done giving",2
+  .byte "orders.",2
+  .byte 3
+  .byte 1,4
+  .byte "... Understood, sir.",2
+  .byte "Commander.",2
+  .byte 3
+  .byte 1,6
+  .byte "Corvane, then. All of us.",2
+  .byte 3
+  .byte 6
+  .word m7Save
+scene7B:
+  .byte 11,1
+  .byte 1,6
+  .byte "The picket has three",2
+  .byte "ships. I have plotted a",2
+  .byte "line between them.",2
+  .byte 3
+  .byte 1,6
+  .byte "Stay out of their sight.",2
+  .byte "If they see you, they call",2
+  .byte "it in.",2
+  .byte 3
+  .byte 1,3
+  .byte "The Vigil follows you in",2
+  .byte "when it is clear. Good",2
+  .byte "luck, Six.",2
+  .byte 3
+  .byte 18,4
+  .word m7bMara
+  .byte 1,1
+  .byte "I hate this. Alone, Six?",2
+  .byte "Come back.",2
+  .byte 3
+  .byte 6
+  .word m7bGo
+m7bMara:
+  .byte 1,4
+  .byte "Go. I will keep the light",2
+  .byte "on.",2
+  .byte 3
+m7bGo:
+  .byte 7,9
+  .word m7bWin,m7bLose
+m7bLose:
+  .byte 11,1
+  .byte 1,3
+  .byte "You made it back. Barely.",2
+  .byte "The Vigil goes in anyway.",2
+  .byte 3
+  .byte 6
+  .word m7bRen
+m7bWin:
+  .byte 11,1
+  .byte 1,2
+  .byte "You are through. The Vigil",2
+  .byte "is right behind you.",2
+  .byte 3
+m7bRen:
   .byte 1,7
-  .byte "End of Mission 6. Progress",2
-  .byte "saved.",2
+  .byte "At the comms station, Ren",2
+  .byte "collapses.",2
+  .byte 3
+  .byte 18,1
+  .word m7bLost
+  .byte 18,2
+  .word m7bAlone
+  .byte 6
+  .word m7bOk
+m7bAlone:
+  .byte 18,16
+  .word m7bOk
+  .byte 6
+  .word m7bLost
+m7bOk:
+  .byte 1,6
+  .byte "I am all right. They were",2
+  .byte "so loud, Six. They are",2
+  .byte "waiting for you.",2
+  .byte 3
+  .byte 6
+  .word m7Save
+m7bLost:
+  .byte 17,128
+  .byte 1,5
+  .byte "She will not wake up. The",2
+  .byte "medic says her mind",2
+  .byte "just... went somewhere.",2
+  .byte 3
+  .byte 1,2
+  .byte "Then we go and bring her",2
+  .byte "back.",2
+  .byte 3
+m7Save:
+  .byte 8,6
+  .byte 14,5
+  .word sceneM8
+.segment "SCRIPT3"
+sceneM8:
+  .byte 11,0
+  .byte 1,2
+  .byte "Corvane. Where the",2
+  .byte "Lanterns died, and where",2
+  .byte "they are still flying.",2
   .byte 3
   .byte 1,7
   .byte "Spare fighters: "
   .byte 16
   .byte ".",2
   .byte 3
+  .byte 18,64
+  .word m8Patrol
+  .byte 6
+  .word m8Ren
+m8Patrol:
+  .byte 1,2
+  .byte "The Concord patrol will",2
+  .byte "take the outer guard. They",2
+  .byte "owe us that much.",2
+  .byte 3
+m8Ren:
+  .byte 18,128
+  .word m8RenGone
+  .byte 1,6
+  .byte "I can hear all of them",2
+  .byte "now. Teller is calling you",2
+  .byte "in, Six.",2
+  .byte 3
+  .byte 6
+  .word m8Wing
+m8RenGone:
+  .byte 1,5
+  .byte "Ren is still in the",2
+  .byte "medbay. She has not woken.",2
+  .byte 3
+m8Wing:
+  .byte 18,4
+  .word m8Mara
+  .byte 1,0
+  .byte "Last flight, Six. Then I",2
+  .byte "am going home to my",2
+  .byte "daughter.",2
+  .byte 3
+  .byte 6
+  .word m8Go
+m8Mara:
+  .byte 1,4
+  .byte "Just you and me, Six. He",2
+  .byte "would have liked that.",2
+  .byte 3
+m8Go:
+  .byte 7,10
+  .word m8Win,m8Lose
+m8Lose:
+  .byte 11,1
+  .byte 1,5
+  .byte "Your ship is gone, Six. I",2
+  .byte "towed you the last mile.",2
+  .byte "The core is right there.",2
+  .byte 3
+m8Win:
+  .byte 11,4
+  .byte 1,8
+  .byte "Six. You came back. You",2
+  .byte "always do.",2
+  .byte 3
+  .byte 1,8
+  .byte "Do you remember now? Your",2
+  .byte "heart stopped for nine",2
+  .byte "minutes, out here.",2
+  .byte 3
+  .byte 1,8
+  .byte "The Array kept you. Then",2
+  .byte "it let you go. It sent you",2
+  .byte "home.",2
+  .byte 3
+  .byte 1,8
+  .byte "We thought we were trapped",2
+  .byte "forever. Then you lived,",2
+  .byte "and we knew.",2
+  .byte 3
+  .byte 1,8
+  .byte "If one of us can come",2
+  .byte "home, all of us can.",2
+  .byte 3
+  .byte 18,8
+  .word m8Spared
+  .byte 6
+  .word m8Mara2
+m8Spared:
+  .byte 1,8
+  .byte "You let me drift, that",2
+  .byte "day. You did not have to.",2
+  .byte 3
+m8Mara2:
+  .byte 1,5
+  .byte "Jun... is it really you?",2
+  .byte 3
+  .byte 1,8
+  .byte "Hello, Mara. I am sorry. I",2
+  .byte "broke left.",2
+  .byte 3
   .byte 1,7
-  .byte "The story continues in",2
-  .byte "Mission 7, which is not",2
-  .byte "built yet.",2
+  .byte "What do you do?",2
+  .byte 4
+  .word endSilence,m8Save
+  .byte "Destroy the Array.",2
+  .byte "Save the echoes.",2
+m8Save:
+  .byte 18,8
+  .word m8Trust
+  .byte 1,8
+  .byte "The others do not trust",2
+  .byte "you yet. We cannot leave.",2
+  .byte "Not today.",2
+  .byte 3
+  .byte 6
+  .word endVigil
+m8Trust:
+  .byte 18,128
+  .word m8NoRen
+  .byte 18,1
+  .word m8NoRen
+  .byte 18,2
+  .word m8Alone
+  .byte 6
+  .word m8RenOk
+m8Alone:
+  .byte 18,16
+  .word m8RenOk
+m8NoRen:
+  .byte 1,8
+  .byte "Without Ren, no one can",2
+  .byte "carry our voices home.",2
+  .byte "Stay with us, then.",2
+  .byte 3
+  .byte 6
+  .word endVigil
+m8RenOk:
+  .byte 1,7
+  .byte "How do you save them?",2
+  .byte 4
+  .word endHome,endVigil
+  .byte "Tell the world.",2
+  .byte "Stay and guard them.",2
+endSilence:
+  .byte 11,4
+  .byte 1,7
+  .byte "You fire into the core.",2
+  .byte "The voices fall silent,",2
+  .byte "one by one.",2
+  .byte 3
+  .byte 1,8
+  .byte "... Thank you, Six.",2
+  .byte 3
+  .byte 1,7
+  .byte "Across the whole front,",2
+  .byte "the Serrath drones go",2
+  .byte "dark.",2
+  .byte 3
+  .byte 18,4
+  .word sMara
+  .byte 1,1
+  .byte "So that is it. We stay",2
+  .byte "dead, then. I will write",2
+  .byte "her a letter she never",2
+  .byte "gets.",2
+  .byte 3
+sMara:
+  .byte 1,4
+  .byte "Teller is free. That is",2
+  .byte "enough for me.",2
+  .byte 3
+  .byte 1,2
+  .byte "The Lanterns died at",2
+  .byte "Corvane. Let the record",2
+  .byte "say so.",2
+  .byte 3
+  .byte 6
+  .word theEnd
+endHome:
+  .byte 11,4
+  .byte 1,7
+  .byte "Ren opens the channel.",2
+  .byte "Every echo speaks at once,",2
+  .byte "on every Concord band.",2
+  .byte 3
+  .byte 1,6
+  .byte "They are hearing it, Six.",2
+  .byte "All of it. The orders. The",2
+  .byte "names.",2
+  .byte 3
+  .byte 1,2
+  .byte "Then the war ends with the",2
+  .byte "truth. And I stand trial",2
+  .byte "for my part.",2
+  .byte 3
+  .byte 18,4
+  .word hMara
+  .byte 1,0
+  .byte "I am going home, Six. My",2
+  .byte "daughter is going to hate",2
+  .byte "this beard.",2
+  .byte 3
+hMara:
+  .byte 1,4
+  .byte "I will tell Teller's",2
+  .byte "family myself.",2
+  .byte 3
+  .byte 1,7
+  .byte "The Lanterns come home.",2
+  .byte 3
+  .byte 6
+  .word theEnd
+endVigil:
+  .byte 11,4
+  .byte 1,7
+  .byte "The Vigil takes station",2
+  .byte "beside the Array.",2
+  .byte 3
+  .byte 1,2
+  .byte "One last command, then. We",2
+  .byte "guard them.",2
+  .byte 3
+  .byte 1,4
+  .byte "Teller is here. I am not",2
+  .byte "leaving her again.",2
+  .byte 3
+  .byte 18,4
+  .word vHaleGone
+  .byte 1,0
+  .byte "Someone has to keep the",2
+  .byte "coffee hot.",2
+  .byte 3
+  .byte 6
+  .word vRen
+vHaleGone:
+  .byte 1,7
+  .byte "Among the voices, one",2
+  .byte "still laughs at your",2
+  .byte "jokes. Hale.",2
+  .byte 3
+vRen:
+  .byte 18,128
+  .word vigilEnd
+  .byte 1,6
+  .byte "I will listen for the next",2
+  .byte "one, Six. And we will",2
+  .byte "bring them back.",2
+  .byte 3
+vigilEnd:
+  .byte 1,7
+  .byte "One by one, you bring them",2
+  .byte "home.",2
+  .byte 3
+theEnd:
+  .byte 11,3
+  .byte 1,7
+  .byte "DEAD AIR. THE END.",2
+  .byte 3
+  .byte 1,7
+  .byte "Thank you for flying with",2
+  .byte "the Lanterns.",2
+  .byte 3
+  .byte 8,7
+finEnd:
+  .byte 11,3
+  .byte 1,7
+  .byte "The story is complete.",2
+  .byte "Choose New game to fly it",2
+  .byte "again.",2
   .byte 3
   .byte 13
+STORYTARGET = sceneStart
 .segment "MATH"
 saveTab:
   .byte 4
@@ -1004,4 +1423,8 @@ saveTab:
   .byte 4
   .word sceneM6
   .byte 4
-  .word m6End
+  .word m7Start
+  .byte 5
+  .word sceneM8
+  .byte 5
+  .word finEnd

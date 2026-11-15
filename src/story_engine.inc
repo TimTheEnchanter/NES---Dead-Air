@@ -590,6 +590,18 @@ pick_start:
   sta resumePtr+1
   lda #0
   sta storyFlags
+.ifdef STORYTEST
+  ; test builds: open straight at a scene in the finale bank
+  lda #5
+  sta scriptBank
+  lda #<STORYTARGET
+  sta resumePtr
+  lda #>STORYTARGET
+  sta resumePtr+1
+  lda #STORYF2
+  sta storyFlags2
+  rts
+.endif
   lda saveArea
   cmp #'D'
   bne :+
@@ -600,7 +612,7 @@ pick_start:
   cmp #1
   bne :+
   lda saveArea+3
-  cmp #6               ; resume points in saveTab
+  cmp #8               ; resume points in saveTab
   bcs :+
   jsr save_sum
   cmp saveArea+5

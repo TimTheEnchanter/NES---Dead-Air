@@ -203,6 +203,9 @@ guardT: .res 2
 guardSaid: .res 1
 protSlot: .res 1
 protR: .res 1
+tintColor: .res 1
+sneakSeen: .res 1
+sneakWarned: .res 1
 tintSend: .res 1
 attrHi: .res 1
 attrWork: .res 30
@@ -232,6 +235,7 @@ radioReq: .res 1
 radioT: .res 1
 radioPage: .res 1
 radioOff: .res 1
+radioBuf: .res 24
 eR: .res 1
 eU: .res 1
 eF: .res 1

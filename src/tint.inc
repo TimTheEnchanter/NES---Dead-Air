@@ -6,6 +6,8 @@
 .pushseg
 .segment "MATH"
 ECHO_MODEL = 16
+CONCORD_MODEL = 32
+CARRIER_MODEL = $0A
 ATTR_COST  = 450       ; IRQ cycles kept back for write_attrs
 
 ; Frame start: forget last frame's squares while a tint is fading out.
@@ -197,9 +199,15 @@ tint_palette:
   sta PPUADDR
   lda #$05
   sta PPUADDR
-  lda palC,x
-  sta PPUDATA
-  lda palD,x
+  lda tintColor        ; this mission's tint: colour 1 or 2 by buffer, and 3
+  ldy #$0F
+  cpx #0
+  beq :+
+  lda #$0F
+  ldy tintColor
+: sta PPUDATA
+  sty PPUDATA
+  lda tintColor
   sta PPUDATA
   lda #0               ; out of palette space, or the blank lines take its colour
   sta PPUADDR

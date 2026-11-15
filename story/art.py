@@ -114,8 +114,8 @@ def ren():
     # tired eyes
     line(g,16,23,19,23,2); line(g,29,23,32,23,2)
     return outline(g,None,1)
-PORTRAITS=[('hale',hale('smile'),'smile'),('hale',hale('serious'),'serious'),('voss',voss('calm'),'calm'),('voss',voss('hard'),'hard'),('mara',mara('calm'),'calm'),('mara',mara('hard'),'hard'),('ren',ren(),'calm'),('log',blank(),'none')]
-PAL={'hale':(0x07,0x27,0x37),'voss':(0x0C,0x10,0x37),'mara':(0x06,0x16,0x36),'ren':(0x08,0x17,0x27),'log':(0x0F,0x0F,0x0F)}  # dark, mid, light as NES colours
+PORTRAITS=[('hale',hale('smile'),'smile'),('hale',hale('serious'),'serious'),('voss',voss('calm'),'calm'),('voss',voss('hard'),'hard'),('mara',mara('calm'),'calm'),('mara',mara('hard'),'hard'),('ren',ren(),'calm'),('log',blank(),'none'),('teller',blank(),'none')]
+PAL={'hale':(0x07,0x27,0x37),'voss':(0x0C,0x10,0x37),'mara':(0x06,0x16,0x36),'ren':(0x08,0x17,0x27),'log':(0x0F,0x0F,0x0F),'teller':(0x0F,0x0F,0x0F)}  # dark, mid, light as NES colours
 NESRGB={0x0F:(0,0,0),0x07:(90,44,0),0x27:(232,144,80),0x37:(255,214,170),0x0C:(0,60,90),0x10:(170,170,170),0x06:(120,20,10),0x16:(200,60,30),0x36:(255,190,170),0x01:(10,30,110),0x17:(170,90,20)}
 if __name__=='__main__':
     from PIL import Image

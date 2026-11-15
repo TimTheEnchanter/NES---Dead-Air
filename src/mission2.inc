@@ -3,17 +3,74 @@
 .segment "MATH"
 F2_HALE_LOST = 4
 F2_SPARED    = 8
+F2_PATROL    = 64
 ECHO_SPARE   = 480     ; vblanks the drone drifts before it slips away
 ECHO_FRE     = $20     ; freighter byte: slot 0 is the echo drone
+CONCORD_FRE  = $40     ; with no freighter bits: the wave is Concord pilots
 GUARD_WARN   = 2       ; high byte of the timer when Hale calls for help again
 
 ; After a fight spawns: make slot 0 the echo drone if the step says so.
 spawn_post:
+  ldy #SP_KIND
+  lda (spadP),y
+  cmp #S_FIGHT
+  bne post2
+  ldy #SP_WAIT
+  lda (spadP),y
+  bpl :+
+  and #$7F             ; wait bit 7: slot 0 is this model, fixed in place
+  sta shipModel
+  lda #2
+  sta hPassive
+  lda #4               ; its escort is an ordinary scout
+  sta hp+1
+  jmp post2
+: cmp #1
+  bne :+
+  lda storyFlags2      ; wait 1: the Concord patrol takes this wave for you
+  and #F2_PATROL
+  beq post2
+  lda #0
+  sta alive
+  sta alive+1
+  sta killsLeft
+  lda #R_PATROLHELP
+  jmp postSay
+: cmp #2
+  bne post2
+  lda storyFlags2      ; wait 2: Teller holds one of them off
+  and #F2_SPARED
+  beq post2
+  lda #0
+  sta alive+1
+  lda #1
+  sta killsLeft
+  lda #R_TELLERHELP
+postSay:
+  ldx #0
+  stx radioT
+  jsr say_radio
+post2:
   ldy #SP_FRE
+  lda (spadP),y
+  and #3
+  bne :++
+  lda (spadP),y
+  and #CONCORD_FRE     ; no freighters: this bit means Concord pilots
+  beq :++
+  ldx killsLeft
+: dex
+  bmi :+
+  lda #CONCORD_MODEL
+  sta shipModel,x
+  jmp :-
+: ldy #SP_FRE
   lda (spadP),y
   and #WRECK_FRE
   beq :+
-  lda #VIGIL           ; a defence of the wreck: it takes the hits now
+  lda protSlot
+  bne :+               ; already set by the first wave
+  lda #VIGIL           ; a defence of the wreck or the Vigil: it takes the hits
   sta protSlot
   lda #200
   sta protR
@@ -36,7 +93,10 @@ spawn_post:
 echo_hit:
   ldx hitShip
   lda shipModel,x
-  cmp #ECHO_MODEL
+  cmp #CONCORD_MODEL
+  bne :+
+  jmp concord_hit
+: cmp #ECHO_MODEL
   bne :+
   lda hp,x
   cmp #1

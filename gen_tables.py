@@ -189,17 +189,27 @@ RL=[('WING','HALE: ON YOUR WING, SIX.'),('TALLY','HALE: TWO SCOUTS AHEAD.'),('GO
  ('ASH','HALE: ASHGROVE AHEAD.'),('M_ASH','MARA: ASHGROVE AHEAD.'),('DOCKED','REN: DOCKED. COPYING.'),
  ('ORDERS','REN: GOT THE ORDERS.'),('YOURFILE','REN: SIX... YOUR FILE.'),('WRECKHIT',"REN: THEY'RE HITTING US!"),
  ('WRECKLOW',"REN: HULL'S BREAKING UP!"),
+ ('C_ARRIVE','VOSS: DO NOT KILL THEM.'),('C_MID','VOSS: THE BLAME IS MINE.'),('C_CLEAR','CONCORD: STANDING DOWN.'),
+ ('C_DIS',"HALE: HE'S OUT. ALIVE."),('M_C_DIS',"MARA: HE'S OUT. ALIVE."),
+ ('P_CLOSE','REN: TOO CLOSE, SIX.'),('P_SEEN','REN: THEY SEE YOU!'),('P_PASS','REN: CLEAR. KEEP GOING.'),
+ ('P_FIGHT',"REN: THEY'RE DOWN. GO."),('P_VOICE','...  COME HOME, SIX  ...'),('P_END','REN: THAT WAS YOUR VOICE'),
+ ('E_DIS',"HALE: THAT ONE'S FREE."),('M_E_DIS',"MARA: THAT ONE'S FREE."),
+ ('CARRIERDN',"HALE: CARRIER'S DOWN!"),('M_CARRIERDN',"MARA: CARRIER'S DOWN!"),
+ ('PATROLHELP','CONCORD: WE HAVE THESE.'),('TELLERHELP','TELLER: I HAVE THIS ONE'),
+ ('CORVANE','HALE: CORVANE AGAIN.'),('M_CORVANE','MARA: CORVANE AGAIN.'),
+ ('CARRIER','HALE: SERRATH CARRIER!'),('M_CARRIER','MARA: SERRATH CARRIER!'),
+ ('ECHOES',"HALE: THEY'RE LANTERNS!"),('M_ECHOES',"MARA: THEY'RE LANTERNS!"),
+ ('T_BACK','TELLER: YOU CAME BACK.'),('T_ALWAYS','TELLER: YOU ALWAYS DO.'),
  ('V_ECHOSTOP','REN: IT STOPPED, SIX.'),('V_THATSHER',"REN: SIX... THAT'S HER."),('V_HOME','VIGIL: COME HOME, SIX.')]
-# Radio text is only ever shown in flight: the first pages live in the flight
-# bank, the rest in the fixed CODE bank. One label per page of ten lines.
-FLIGHT_PAGES=5
-o.write(f'RADIO_PAGES={(len(RL)+9)//10}\n')
+# Radio text lives in its own bank (6). say_radio maps it for a moment, copies
+# the one line it needs into RAM, and maps the flight bank back.
+o.write('.segment "RADIO"\n')
 for i,(n,t) in enumerate(RL):
     assert len(t)<=24,t
-    if i%10==0:
-        o.write('.segment "%s"\nradioT%d:\n'%('FLIGHT' if i//10<FLIGHT_PAGES else 'CODE',i//10))
-    o.write('  .byte '+','.join(str(223+RC.index(c) if c!=' ' else 0) for c in t.center(24))+'\n')
+    o.write(f'radioL{i+1}: .byte '+','.join(str(223+RC.index(c) if c!=' ' else 0) for c in t.center(24))+'\n')
     o.write(f'R_{n}={i+1}\n')
+o.write('radioLo: .byte 0,'+','.join(f'<radioL{i+1}' for i in range(len(RL)))+'\n')
+o.write('radioHi: .byte 0,'+','.join(f'>radioL{i+1}' for i in range(len(RL)))+'\n')
 o.write('.segment "MATH"\n')
 # ---- missions: one 13-byte step per nav point
 EMPTY,FIGHT,LAND,AMBUSH,DEFEND=0,1,2,3,4
@@ -208,6 +218,14 @@ LANCER0=4  # freighter-byte bit: slot 0 is a lancer
 ECHO=0x20  # freighter-byte bit: slot 0 is the echo drone
 GUARD=5
 PROTECT=0x10  # freighter byte on a defend step: the wreck takes the hits
+CONCORD=0x40  # with no freighter bits: every ship in the wave is a Concord pilot
+SNEAK,FINISH=6,7
+CARRIER_WAIT=0x80|0x0A   # fight wait byte: slot 0 is the Serrath carrier
+PATROL_SKIP,SPARED_ONE=1,2
+ARRAY=(-200,0,900)
+def sneak(x,y,z,px,pz,arrive=0,clear=0):
+    # a picket at (x+px, y, z+pz); offsets stored /8 in the count and hp bytes
+    return step(SNEAK,x,y,z,arrive,clear,count=(px//8)&255,hp=(pz//8)&255,wait=1)
 WRECK=(-700,60,600)
 HOLD=0x80   # freighter bits: the targets stay put, standing on end
 import os
@@ -250,13 +268,31 @@ MISSIONS=[
  # 6 The Ledger: the Ashgrove wreck; defend it two minutes while Ren copies
  [step(EMPTY,*WRECK,RN['ASH'],0,wait=90),
   step(DEFEND,*WRECK,RN['DOCKED'],RN['YOURFILE'],count=2,hp=4,wait=RN['ORDERS'],fre=PROTECT|LANCER0,limit=26),
-  step(LAND,*VIGIL,RN['LAND'],0)]]
-MODES=[0,0,0,0,2,1,0,0]
-o.write('wreckTab: .byte 0,0,0,0,0,0,0,1\n')
+  step(LAND,*VIGIL,RN['LAND'],0)],
+ # 7A Mutiny Watch: hold the Vigil against Concord pilots; disable, don't kill
+ [step(DEFEND,0,0,-150,RN['C_ARRIVE'],RN['C_CLEAR'],count=2,hp=4,wait=RN['C_MID'],fre=PROTECT|CONCORD,limit=22),
+  step(LAND,*VIGIL,RN['LAND'],0)],
+ # 7B Ghost Run: alone past three pickets; the Array speaks at the end
+ [sneak(-200,0,850, 350,-250, RN['P_PASS'],RN['P_FIGHT']),
+  sneak(700,60,800, -450,50, RN['P_PASS'],RN['P_FIGHT']),
+  sneak(900,0,0, -100,420, RN['P_PASS'],RN['P_FIGHT']),
+  step(EMPTY,600,0,-700,RN['P_VOICE'],0,wait=200),
+  step(FINISH,200,0,-1100,RN['P_END'],0,wait=150)],
+ # 8 Corvane: the outer guard, the carrier, the echoes, the core
+ [step(FIGHT,600,0,600,RN['CORVANE'],0,count=2,hp=4,fre=LANCER0,wait=PATROL_SKIP),
+  step(FIGHT,-600,100,800,RN['CARRIER'],RN['CARRIERDN'],count=2,hp=18,wait=CARRIER_WAIT),
+  step(FIGHT,300,150,800,RN['ECHOES'],0,count=2,hp=4,fre=CONCORD,wait=SPARED_ONE),
+  step(EMPTY,-200,0,550,RN['T_BACK'],0,wait=200),
+  step(FINISH,-200,0,700,RN['T_ALWAYS'],0,wait=150)]]
+MODES=[0,0,0,0,2,1,0,0,0,3,0]
+o.write('wreckTab: .byte 0,0,0,0,0,0,0,1,0,0,2\n')
+o.write(f'ARRAY_X={ARRAY[0]}\nARRAY_Y={ARRAY[1]}\nARRAY_Z={ARRAY[2]}\nCONCORD_TINT=$21\n')
+# tint colour per mission: cyan for the echo drone, light blue for Concord pilots
+o.write('tintTab: .byte $2C,$2C,$2C,$2C,$2C,$2C,$2C,$2C,$21,$2C,$2C\n')
 o.write(f'WRECK_X={WRECK[0]}\nWRECK_Y={WRECK[1]}\nWRECK_Z={WRECK[2]}\n')   # 0 Hale on your wing, 1 Mara, 2 Ren's shuttle and no wingman
 o.write('missionModeTab: .byte '+','.join(map(str,MODES))+'\n')
 # per-mode versions of the wingman's lines; 0 = nobody says it
-MARA={'ASH':'M_ASH','ECHOSTOP':'M_ECHOSTOP','HIGHLEFT':'M_HIGHLEFT','THATSHER':'M_THATSHER','ECHODN':'M_ECHODN','ECHOCONTACT':'M_ECHOCONTACT','THANKS':None,'HURRY':None,'HALEHIT':None,'ONTAIL':None,'WING':'M_WING','GOOD':'M_GOOD','ONE':'M_ONE','BOLT':'M_BOLT','HALE_HIT':'M_HIT','LOW':'M_LOW','HOME':'M_HOME','LANCERDN':'M_LANCERDN','HAULER':None,'TALLY':None,'CLEAR':None}
+MARA={'E_DIS':'M_E_DIS','CARRIERDN':'M_CARRIERDN','CORVANE':'M_CORVANE','CARRIER':'M_CARRIER','ECHOES':'M_ECHOES','C_DIS':'M_C_DIS','ASH':'M_ASH','ECHOSTOP':'M_ECHOSTOP','HIGHLEFT':'M_HIGHLEFT','THATSHER':'M_THATSHER','ECHODN':'M_ECHODN','ECHOCONTACT':'M_ECHOCONTACT','THANKS':None,'HURRY':None,'HALEHIT':None,'ONTAIL':None,'WING':'M_WING','GOOD':'M_GOOD','ONE':'M_ONE','BOLT':'M_BOLT','HALE_HIT':'M_HIT','LOW':'M_LOW','HOME':'M_HOME','LANCERDN':'M_LANCERDN','HAULER':None,'TALLY':None,'CLEAR':None}
 REN={'WING':'R_WING','GOOD':None,'ONE':'R_ONE','BOLT':'R_BOLT','HALE_HIT':None,'LOW':'R_LOW','HOME':'R_HOME','LANCERDN':None,'HAULER':None,'TALLY':None,'CLEAR':None}
 # alone, after Hale is lost: his lines go quiet; the Vigil speaks for a few
 SOLO={n:None for n,t in RL if t.startswith('HALE:')}

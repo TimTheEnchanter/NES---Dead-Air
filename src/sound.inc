@@ -112,31 +112,14 @@ read_pad:
 radio_tick:
   lda radioReq
   beq @timer
-  ldx #0
-  stx radioReq
-  sec
-  sbc #1
-  ldx #0               ; ten lines of 24 fit in an index: page them
-: cmp #10
-  bcc :+
-  sbc #10
-  inx
-  bne :-
-:
-  stx radioPage
-  asl a
-  asl a
-  asl a
-  sta u1hold
-  asl a
-  adc u1hold           ; line * 24
+  lda #0
+  sta radioReq
   ldy #220
   sty radioT
-  sta radioOff
-  tax
+  ldx #0
   lda #$22
   jsr radio_row
-  ldx radioOff
+  ldx #0
   lda #$26
   jmp radio_row
 @timer:
@@ -152,7 +135,7 @@ radio_tick:
 @done:
   rts
 
-; A = nametable high byte, X = offset into radioText, or $FF to blank the row.
+; A = nametable high byte, X = 0 to write radioBuf, or $FF to blank the row.
 radio_row:
   bit PPUSTATUS
   sta PPUADDR
@@ -166,30 +149,12 @@ radio_row:
   dey
   bne :-
   rts
-:
-;  one copy of the copy loop per page of ten lines
-  lda radioPage
-  asl a
-  tay
-  lda radioPages+1,y
-  pha
-  lda radioPages,y
-  pha
-  ldy #24
-  rts                  ; jumps to the page's loop
-.repeat RADIO_PAGES, P
-.ident(.sprintf("radioPage%d", P)):
-  lda .ident(.sprintf("radioT%d", P)),x
+: lda radioBuf,x
   sta PPUDATA
   inx
   dey
-  bne .ident(.sprintf("radioPage%d", P))
+  bne :-
   rts
-.endrep
-radioPages:
-.repeat RADIO_PAGES, P
-  .word .ident(.sprintf("radioPage%d", P))-1
-.endrep
 
 sound_tick:
   jsr read_pad
