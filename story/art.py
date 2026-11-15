@@ -98,24 +98,45 @@ def mara(expr):
     if expr=='hard':
         line(g,16,18,21,19,1); line(g,27,19,32,18,1); eye(g,16,20,True); eye(g,29,20,True)
         rect(g,21,28,27,28,1)
+    elif expr=='soft':
+        line(g,16,16,21,16,1); line(g,27,16,32,16,1); eye(g,16,19); eye(g,29,19)
+        line(g,20,27,21,28,1); rect(g,22,28,26,28,1); line(g,27,28,28,27,1)
     else:
         line(g,16,17,21,17,1); line(g,27,17,32,17,1); eye(g,16,19); eye(g,29,19)
         rect(g,21,28,27,28,1); px(g,28,27,1)
     nose(g); line(g,30,15,28,23,2)
     return outline(g,None,1)
-def ren():
+def ren(expr='calm'):
     g=blank(); uniform(g,False); face_base(g,wide=10,jaw=31)
     # short natural hair and a signals headset
     ell(g,24,12,13,9,1,lambda x,y:y<17)
     for x,y in ((16,8),(20,6),(25,6),(30,8),(33,11),(14,11)): px(g,x,y,2)
     rect(g,10,17,12,25,2); rect(g,36,17,38,25,2); line(g,12,25,18,28,2)
-    line(g,16,18,21,18,1); line(g,27,18,32,18,1); eye(g,16,20); eye(g,29,20)
-    nose(g); rect(g,21,28,27,28,1)
+    if expr=='strain':
+        # brows drawn together, eyes half shut, mouth tight and open
+        line(g,16,17,21,19,1); line(g,27,19,32,17,1); eye(g,16,20,True); eye(g,29,20,True)
+        nose(g); rect(g,22,27,26,28,1); px(g,21,27,1); px(g,27,27,1)
+    else:
+        line(g,16,18,21,18,1); line(g,27,18,32,18,1); eye(g,16,20); eye(g,29,20)
+        nose(g); rect(g,21,28,27,28,1)
     # tired eyes
     line(g,16,23,19,23,2); line(g,29,23,32,23,2)
     return outline(g,None,1)
-PORTRAITS=[('hale',hale('smile'),'smile'),('hale',hale('serious'),'serious'),('voss',voss('calm'),'calm'),('voss',voss('hard'),'hard'),('mara',mara('calm'),'calm'),('mara',mara('hard'),'hard'),('ren',ren(),'calm'),('log',blank(),'none'),('teller',blank(),'none')]
-PAL={'hale':(0x07,0x27,0x37),'voss':(0x0C,0x10,0x37),'mara':(0x06,0x16,0x36),'ren':(0x08,0x17,0x27),'log':(0x0F,0x0F,0x0F),'teller':(0x0F,0x0F,0x0F)}  # dark, mid, light as NES colours
+def teller():
+    # Jun Teller, as the Array holds her: a face made of transmission lines
+    g=blank(); uniform(g); face_base(g,wide=10,jaw=31)
+    # long hair falling past the shoulders
+    poly(g,[(12,24),(12,10),(17,5),(24,3),(31,5),(36,10),(36,24),(37,31),(34,30),(34,15),(29,11),(19,11),(14,15),(14,30),(11,31)],2)
+    line(g,16,17,21,17,1); line(g,27,17,32,17,1); eye(g,16,19); eye(g,29,19)
+    nose(g); rect(g,21,28,27,28,1)
+    g=outline(g,None,1)
+    # every third line is lost to static
+    for y in range(0,32,3):
+        for x in range(W):
+            if g[y][x]: g[y][x]=1 if g[y][x]==3 else 0
+    return g
+PORTRAITS=[('hale',hale('smile'),'smile'),('hale',hale('serious'),'serious'),('voss',voss('calm'),'calm'),('voss',voss('hard'),'hard'),('mara',mara('calm'),'calm'),('mara',mara('hard'),'hard'),('ren',ren(),'calm'),('log',blank(),'none'),('teller',teller(),'ghost'),('mara',mara('soft'),'soft'),('ren',ren('strain'),'strain')]
+PAL={'hale':(0x07,0x27,0x37),'voss':(0x0C,0x10,0x37),'mara':(0x06,0x16,0x36),'ren':(0x08,0x17,0x27),'log':(0x0F,0x0F,0x0F),'teller':(0x0C,0x1C,0x2C)}  # dark, mid, light as NES colours
 NESRGB={0x0F:(0,0,0),0x07:(90,44,0),0x27:(232,144,80),0x37:(255,214,170),0x0C:(0,60,90),0x10:(170,170,170),0x06:(120,20,10),0x16:(200,60,30),0x36:(255,190,170),0x01:(10,30,110),0x17:(170,90,20)}
 if __name__=='__main__':
     from PIL import Image

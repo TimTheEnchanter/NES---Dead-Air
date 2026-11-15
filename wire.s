@@ -103,6 +103,7 @@ K_NEXT=125
 .include "src/mission3.inc"
 .include "src/mission4.inc"
 .include "src/radio.inc"
+.include "src/music.inc"
 .include "src/draw.inc"
 .include "src/ai.inc"
 .include "src/mainloop.inc"

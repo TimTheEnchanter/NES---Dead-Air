@@ -10,6 +10,8 @@ storyMisc:
   .byte 0,0,0,0,0,0,0,0,0,0,32,0,4,0,0,0
   .byte 0,124,56,16,0,0,0,0,0,0,0,0,0,0,0,0
   .byte 64,96,112,120,112,96,64,0,0,0,0,0,0,0,0,0
+  .byte 16,56,56,124,254,186,40,0,0,0,0,0,0,0,0,0
+  .byte 0,0,0,0,0,0,0,0,0,32,20,72,36,68,16,0
 storyFont:
   .byte 0,0,0,0,0,0,0,0,24,24,24,24,0,0,24,0,102,102,102,0,0,0,0,0,102,102,255,102,255,102,102,0
   .byte 24,62,96,60,6,124,24,0,0,102,12,24,48,102,70,0,60,102,60,56,103,102,63,0,6,12,24,0,0,0,0,0
@@ -35,7 +37,7 @@ storyFont:
   .byte 0,24,126,24,24,24,14,0,0,0,102,102,102,102,62,0,0,0,102,102,102,60,24,0,0,0,99,107,127,62,54,0
   .byte 0,0,102,60,24,60,102,0,0,0,102,102,102,62,12,120,0,0,126,12,24,48,126,0,28,48,24,112,24,48,28,0
   .byte 24,24,24,0,0,24,24,24,56,12,24,14,24,12,56,0,51,255,204,0,0,0,0,0,0,0,0,0,0,0,0,0
-PORT_TILES=96
+PORT_TILES=121
 storyPort:
   .byte 0,0,0,0,0,0,1,3,0,0,0,0,0,0,0,0,0,0,0,0,15,255,255,243,0,0,0,0,0,0,0,12
   .byte 0,0,0,128,255,255,63,243,0,0,0,0,0,0,192,12,0,0,0,0,128,192,224,240,0,0,0,0,0,0,0,0
@@ -85,7 +87,20 @@ storyPort:
   .byte 254,177,177,177,209,129,65,17,0,206,78,206,110,254,254,238,71,71,56,7,1,0,0,0,57,57,7,1,0,0,0,0
   .byte 255,254,255,127,159,255,127,127,255,255,255,255,248,127,63,31,49,177,46,32,64,128,0,0,206,206,192,192,128,0,0,0
   .byte 128,0,0,0,0,0,0,255,127,255,255,255,255,255,255,0,4,4,2,2,2,2,1,254,248,248,252,252,252,252,254,0
-.segment "MATH"
+  .byte 0,0,0,0,0,0,0,2,0,0,0,0,0,0,0,1,0,0,0,0,112,128,0,0,0,0,0,0,15,127,0,255
+  .byte 0,0,128,0,7,0,0,0,0,0,0,0,248,255,0,255,0,0,0,0,0,128,0,32,0,0,0,0,0,0,0,192
+  .byte 4,0,16,16,0,16,16,1,3,0,15,15,0,15,15,0,0,0,0,15,31,127,255,255,255,0,255,255,0,255,255,0
+  .byte 0,0,0,248,252,255,253,254,255,0,255,255,0,255,255,0,16,0,4,4,0,4,4,0,224,0,248,248,0,248,248,0
+  .byte 17,17,1,17,17,1,17,17,15,15,0,15,15,0,15,15,255,255,255,255,255,159,255,255,255,3,0,15,159,0,255,255
+  .byte 255,255,255,255,191,188,191,191,255,224,0,248,252,0,255,255,4,132,0,132,68,128,68,132,248,120,0,120,248,0,248,248
+  .byte 1,17,17,1,33,33,0,30,0,15,15,0,30,30,0,0,255,254,255,255,255,255,63,127,0,255,255,0,248,127,0,31
+  .byte 191,30,255,254,253,254,254,255,0,255,255,0,15,255,0,252,0,132,4,0,66,194,0,60,0,248,248,0,188,60,0,0
+  .byte 255,255,255,255,255,255,255,255,3,255,255,15,159,159,255,255,253,252,251,251,187,183,183,183,226,255,255,252,252,252,255,255
+  .byte 136,136,40,168,80,136,72,144,112,240,208,80,224,240,240,224,255,254,255,255,255,255,127,127,255,255,255,247,248,127,63,31
+  .byte 255,255,255,255,255,255,255,15,0,63,207,243,15,15,159,255,255,255,255,255,191,191,191,184,0,254,249,231,248,248,252,255
+  .byte 254,177,49,177,209,129,65,17,0,78,206,206,110,126,254,238,255,254,255,127,159,255,127,127,255,255,255,248,252,127,63,31
+  .byte 191,30,255,254,253,254,255,255,255,255,255,15,31,255,254,252
+.segment "HIGH2"
 portMap:
   .byte 0,128,129,130,131,0,0,132,133,134,135,0,0,136,137,138,139,0,0,140,141,142,143,0,144,145,146,147,148,149,150,151,152,153,154,155
   .byte 0,128,129,130,131,0,0,132,133,134,135,0,0,136,156,157,158,0,0,140,159,160,143,0,144,145,146,147,148,149,150,151,152,153,154,155
@@ -95,7 +110,9 @@ portMap:
   .byte 0,161,188,189,190,164,0,191,192,193,194,195,0,196,204,205,206,0,0,200,201,207,203,0,144,145,177,178,148,149,150,151,152,153,154,155
   .byte 0,208,209,210,131,0,0,211,212,213,214,0,0,215,216,217,218,0,0,219,220,207,221,0,144,145,177,178,148,149,150,151,152,153,222,223
   .byte 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0
-  .byte 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0
+  .byte 0,224,225,226,227,0,0,228,229,230,231,0,0,232,233,234,235,0,0,236,237,238,239,0,144,145,177,178,148,149,150,151,152,153,154,155
+  .byte 0,161,188,189,190,164,0,191,192,193,194,195,0,196,240,241,242,0,0,200,243,202,203,0,144,145,177,178,148,149,150,151,152,153,154,155
+  .byte 0,208,209,210,131,0,0,211,212,213,214,0,0,215,244,245,246,0,0,219,247,248,221,0,144,145,177,178,148,149,150,151,152,153,222,223
 portPal:
   .byte 7,39,55
   .byte 7,39,55
@@ -105,7 +122,9 @@ portPal:
   .byte 6,22,54
   .byte 8,23,39
   .byte 15,15,15
-  .byte 15,15,15
+  .byte 12,28,44
+  .byte 6,22,54
+  .byte 8,23,39
 portName:
   .byte 72,65,76,69,32,32,32,32,32,32,32,32
   .byte 72,65,76,69,32,32,32,32,32,32,32,32
@@ -116,6 +135,8 @@ portName:
   .byte 82,69,78,32,79,75,65,70,79,82,32,32
   .byte 86,73,71,73,76,32,76,79,71,32,32,32
   .byte 74,85,78,32,84,69,76,76,69,82,32,32
+  .byte 77,65,82,65,32,68,82,65,89,32,32,32
+  .byte 82,69,78,32,79,75,65,70,79,82,32,32
 .segment "ASSETS"
 storyRuns:
   .byte 32,78,9,67,86,83,32,86,73,71,73,76,32,99,8,1,5,5,5,5,5,5,2,32,108,17,1,5,5,5,5,5
@@ -133,13 +154,14 @@ storyRuns:
 storyAttr:
   .byte 0,0,0,0,0,0,0,0,0,85,17,0,0,0,0,0,0,5,1,0,0,0,0,0,0,0,0,0,0,0,0,0
   .byte 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0
-.segment "MATH"
+.segment "HIGH2"
 locNames:
   .byte 66,82,73,69,70,73,78,71,32,82,79,79,77
   .byte 32,70,76,73,71,72,84,32,68,69,67,75,32
   .byte 32,32,32,67,82,69,87,32,66,65,82,32,32
   .byte 32,32,86,73,71,73,76,32,76,79,71,32,32
   .byte 32,32,84,72,69,32,65,82,82,65,89,32,32
+  .byte 32,32,32,32,72,65,78,71,65,82,32,32,32
 .segment "SCRIPT1"
 script:
 menu:
@@ -156,6 +178,7 @@ doNew:
   .byte 12
 sceneStart:
   .byte 11,0
+  .byte 19,3
   .byte 1,2
   .byte "Lantern Six. You are late.",2
   .byte 3
@@ -279,6 +302,7 @@ deck:
   .byte 3
 sceneBar:
   .byte 11,2
+  .byte 19,4
   .byte 1,4
   .byte "So you are the one Hale",2
   .byte "will not stop talking",2
@@ -323,7 +347,10 @@ barRen:
   .word sceneM2
 .segment "SCRIPT2"
 sceneM2:
+  .byte 20,5
+  .word hangar
   .byte 11,0
+  .byte 19,3
   .byte 1,2
   .byte "Serrath convoy at Tarn",2
   .byte "Gap. Two freighters, light",2
@@ -397,6 +424,7 @@ m2Win:
   .byte 3
 m2Ren:
   .byte 11,2
+  .byte 19,4
   .byte 1,6
   .byte "Six, you heard it out",2
   .byte "there too. I finished",2
@@ -430,7 +458,10 @@ m2Ren:
   .byte 3
   .byte 8,1
 sceneM3:
+  .byte 20,5
+  .word hangar
   .byte 11,0
+  .byte 19,3
   .byte 1,2
   .byte "An old Concord relay buoy",2
   .byte "at Kesh woke up last",2
@@ -508,6 +539,7 @@ m3Deck:
   .byte "... Yes, sir.",2
   .byte 3
   .byte 11,2
+  .byte 19,4
   .byte 1,4
   .byte "So she called the ambush.",2
   .byte "Teller always did see",2
@@ -563,6 +595,8 @@ m3Voss:
 m3Save:
   .byte 8,2
 m4Start:
+  .byte 20,5
+  .word hangar
   .byte 10,16
   .word scene4A
   .byte 6
@@ -591,7 +625,7 @@ scene4A:
 m4aLose:
   .byte 17,1
   .byte 11,1
-  .byte 1,6
+  .byte 1,10
   .byte "Six... my head. It was",2
   .byte "like all of them were",2
   .byte "shouting at once.",2
@@ -628,6 +662,7 @@ m4aAfter:
   .byte "this later.",2
   .byte 3
   .byte 11,2
+  .byte 19,4
   .byte 1,5
   .byte "You flew her out there to",2
   .byte "listen to ghosts.",2
@@ -640,6 +675,7 @@ m4aAfter:
   .word m4Save
 scene4B:
   .byte 11,0
+  .byte 19,3
   .byte 1,2
   .byte "Okafor wants to use the",2
   .byte "old listening post at",2
@@ -686,6 +722,7 @@ m4bWin:
   .byte 3
 m4bBar:
   .byte 11,2
+  .byte 19,4
   .byte 1,4
   .byte "You were never the same",2
   .byte "after Corvane, you know.",2
@@ -702,7 +739,10 @@ m4bBar:
 m4Save:
   .byte 8,3
 sceneM5:
+  .byte 20,5
+  .word hangar
   .byte 11,0
+  .byte 19,3
   .byte 1,2
   .byte "A Serrath picket has found",2
   .byte "our hiding place. If it",2
@@ -770,6 +810,7 @@ m5Lost:
   .byte 3
 m5Bar:
   .byte 11,2
+  .byte 19,4
   .byte 18,4
   .word m5Seat
   .byte 6
@@ -805,7 +846,7 @@ m5Mara:
   .byte 6
   .word m5Save
 m5Hurt:
-  .byte 1,6
+  .byte 1,10
   .byte "My head still rings, Six.",2
   .byte "But I can hear them more",2
   .byte "clearly now.",2
@@ -824,7 +865,7 @@ m5Apology:
   .byte "Say nothing.",2
 m5Sorry:
   .byte 17,16
-  .byte 1,6
+  .byte 1,10
   .byte "Thank you. I have not",2
   .byte "slept, Six. The voices are",2
   .byte "louder every night.",2
@@ -832,7 +873,10 @@ m5Sorry:
 m5Save:
   .byte 8,4
 sceneM6:
+  .byte 20,5
+  .word hangar
   .byte 11,0
+  .byte 19,3
   .byte 1,2
   .byte "Long range picked up a",2
   .byte "wreck drifting into the",2
@@ -889,6 +933,8 @@ m6Win:
   .byte 3
 m6Truth:
   .byte 11,0
+  .byte 19,3
+  .byte 19,4
   .byte 1,6
   .byte "These are the Ashgrove's",2
   .byte "orders. Concord",2
@@ -979,12 +1025,15 @@ m6Ren:
 m6Save:
   .byte 8,5
 m7Start:
+  .byte 20,5
+  .word hangar
   .byte 18,32
   .word scene7A
   .byte 6
   .word scene7B
 scene7A:
   .byte 11,0
+  .byte 19,3
   .byte 1,2
   .byte "The records went out an",2
   .byte "hour ago. Concord answered",2
@@ -1028,6 +1077,7 @@ m7aWin:
   .byte 3
 m7aAfter:
   .byte 11,0
+  .byte 19,3
   .byte 1,2
   .byte "I gave them everything.",2
   .byte "The orders, the retreat,",2
@@ -1038,7 +1088,7 @@ m7aAfter:
   .byte "yours. I am done giving",2
   .byte "orders.",2
   .byte 3
-  .byte 1,4
+  .byte 1,9
   .byte "... Understood, sir.",2
   .byte "Commander.",2
   .byte 3
@@ -1134,8 +1184,36 @@ m7Save:
   .byte 14,5
   .word sceneM8
 .segment "SCRIPT3"
+hangar:
+  .byte 11,5
+  .byte 19,3
+  .byte 22
+  .byte 1,7
+  .byte "Spare fighters: "
+  .byte 16
+  .byte ".",2
+  .byte 18,4
+  .word hgHale
+  .byte 6
+  .word hgRen
+hgHale:
+  .byte "Hale's berth is empty.",2
+hgRen:
+  .byte 18,128
+  .word hgRenOut
+  .byte 6
+  .word hgDone
+hgRenOut:
+  .byte "Ren lies in the medbay.",2
+hgDone:
+  .byte 3
+  .byte 21
 sceneM8:
+  .byte 20,5
+  .word hangar
   .byte 11,0
+  .byte 19,3
+  .byte 19,5
   .byte 1,2
   .byte "Corvane. Where the",2
   .byte "Lanterns died, and where",2
@@ -1159,7 +1237,7 @@ m8Patrol:
 m8Ren:
   .byte 18,128
   .word m8RenGone
-  .byte 1,6
+  .byte 1,10
   .byte "I can hear all of them",2
   .byte "now. Teller is calling you",2
   .byte "in, Six.",2
@@ -1198,6 +1276,7 @@ m8Lose:
   .byte 3
 m8Win:
   .byte 11,4
+  .byte 19,4
   .byte 1,8
   .byte "Six. You came back. You",2
   .byte "always do.",2
@@ -1283,6 +1362,8 @@ m8RenOk:
   .byte "Stay and guard them.",2
 endSilence:
   .byte 11,4
+  .byte 19,4
+  .byte 19,128
   .byte 1,7
   .byte "You fire into the core.",2
   .byte "The voices fall silent,",2
@@ -1305,7 +1386,7 @@ endSilence:
   .byte "gets.",2
   .byte 3
 sMara:
-  .byte 1,4
+  .byte 1,9
   .byte "Teller is free. That is",2
   .byte "enough for me.",2
   .byte 3
@@ -1318,6 +1399,8 @@ sMara:
   .word theEnd
 endHome:
   .byte 11,4
+  .byte 19,4
+  .byte 19,6
   .byte 1,7
   .byte "Ren opens the channel.",2
   .byte "Every echo speaks at once,",2
@@ -1341,7 +1424,7 @@ endHome:
   .byte "this beard.",2
   .byte 3
 hMara:
-  .byte 1,4
+  .byte 1,9
   .byte "I will tell Teller's",2
   .byte "family myself.",2
   .byte 3
@@ -1352,6 +1435,8 @@ hMara:
   .word theEnd
 endVigil:
   .byte 11,4
+  .byte 19,4
+  .byte 19,6
   .byte 1,7
   .byte "The Vigil takes station",2
   .byte "beside the Array.",2
@@ -1360,7 +1445,7 @@ endVigil:
   .byte "One last command, then. We",2
   .byte "guard them.",2
   .byte 3
-  .byte 1,4
+  .byte 1,9
   .byte "Teller is here. I am not",2
   .byte "leaving her again.",2
   .byte 3

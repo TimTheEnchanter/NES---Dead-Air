@@ -46,6 +46,10 @@ Radio: text lives in bank 6 (`RADIO`). `radio_fetch` maps it for a moment, copie
 
 Story tests: `STORYTARGET=<label> python3 story/gen_story.py` plus `-D STORYTEST=1 -D STORYF2=<flags>` builds a ROM that opens at that scene in bank 5.
 
+Music: `src/music.inc`, two voices (triangle bass, pulse 1 melody) in fixed space after the line loops (`HIGH2`). Tracks are composed in `gen_tables.py` as bars of note names: title, game over, Vigil (briefings), Signal (the bar and the Array), Corvane (finale), Home (endings). Story op MUSIC starts a track; a location change cues the Vigil or Signal theme. Flight stays silent by design.
+
+Portraits: 11, including Teller (cyan, broken by static), Mara softened, and Ren under strain; 121 of 128 portrait tiles are used. The hangar (story op FIGHTERS, called with CALL/RET from each chapter start) shows six fighter icons, whole or broken, and who is missing.
+
 Picture timing: `test/slips.py` needs a `DEBUG` build. It finds the fixed marker line and counts frames where it is off its usual row (27) or missing. The clean range of `BUD_B` is about 4465-4500; 4485 is the setting.
 
 Spare fighters: story flag bits 5-7 count fighters lost (script op LOST); op SPARE prints how many remain of `SPARE_START`.

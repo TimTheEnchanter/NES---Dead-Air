@@ -51,7 +51,7 @@ ppu_copy:
 : lda storyMisc,x
   sta PPUDATA
   inx
-  cpx #160
+  cpx #192             ; 12 tiles: frame, stars, cursor, fighters
   bne :-
   lda #$02
   sta PPUADDR
@@ -511,6 +511,48 @@ haveF2:
   sta textP+1
 : jmp story_loop
 :
+  cmp #19
+  bne :+
+  jsr next_byte        ; MUSIC track (128 stops)
+  sta musReq
+  jmp story_loop
+: cmp #20
+  bne :+
+  jsr next_byte        ; CALL bank, scene: run it, then RET comes back here
+  sta spad0
+  jsr next_byte
+  sta sTargA
+  jsr next_byte
+  sta sTargA+1
+  lda scriptBank
+  sta retBank
+  lda textP
+  sta retPtr
+  lda textP+1
+  sta retPtr+1
+  lda spad0
+  sta scriptBank
+  jsr map_bank
+  lda sTargA
+  sta textP
+  lda sTargA+1
+  sta textP+1
+  jmp story_loop
+: cmp #21
+  bne :+
+  lda retBank          ; RET
+  sta scriptBank
+  jsr map_bank
+  lda retPtr
+  sta textP
+  lda retPtr+1
+  sta textP+1
+  jmp story_loop
+: cmp #22
+  bne :+
+  jsr draw_fighters    ; FIGHTERS
+  jmp story_loop
+:
   cmp #12
   bne :+
   lda #0               ; CLEAR flags
@@ -548,7 +590,64 @@ show_location:
   sta qLen
   lda #3
   sta qJob
+  jsr wait_job
+  ; the picture row the hangar draws on goes back to its stars
+  ldx #12
+: lda locRow7,x
+  sta qBuf,x
+  dex
+  bpl :-
+  lda #$20
+  sta qAddr+1
+  lda #$EE             ; row 7, column 14
+  sta qAddr
+  lda #13
+  sta qLen
+  lda #3
+  sta qJob
   jmp wait_job
+locRow7: .byte 0,0,8,0,0,0,0,0,0,0,0,0,0
+
+; Six fighter icons on row 7 of the picture: whole for each spare fighter,
+; broken for each one lost.
+draw_fighters:
+  lda sCol
+  pha
+  lda sRow
+  pha
+  lda #7
+  sta sRow
+  lda #15
+  sta sCol
+  lda storyFlags
+  lsr a
+  lsr a
+  lsr a
+  lsr a
+  lsr a
+  sta spad0
+  lda #SPARE_START
+  sec
+  sbc spad0
+  sta spad0            ; spare fighters
+  ldx #0
+: stx sTargA
+  lda #11              ; fighter
+  cpx spad0
+  bcc :+
+  lda #12              ; wreck
+: jsr put_char
+  lda #0
+  jsr put_char
+  ldx sTargA
+  inx
+  cpx #SPARE_START
+  bne :--
+  pla
+  sta sRow
+  pla
+  sta sCol
+  rts
 
 ; Save record: 'D','A', version, resume point, flags, checksum.
 save_sum:
@@ -814,9 +913,15 @@ jobsDone:
   sta PPUDATA
   lda portPal+2,y
   sta PPUDATA
-  ; 36 tiles: sPort * 36
+  ; 36 tiles: sPort * 36, from a second base past portrait 6 so the index fits
+  lda #0
+  sta portHigh
   lda sPort
-  asl a
+  cmp #7
+  bcc :+
+  sbc #7
+  inc portHigh
+: asl a
   asl a
   sta u0
   asl a
@@ -833,11 +938,20 @@ row:
   sta PPUADDR
   pha
   ldy #6
+  lda portHigh
+  bne :++
 : lda portMap,x
   sta PPUDATA
   inx
   dey
   bne :-
+  beq :++
+: lda portMap+7*36,x
+  sta PPUDATA
+  inx
+  dey
+  bne :-
+:
   pla
   clc
   adc #32

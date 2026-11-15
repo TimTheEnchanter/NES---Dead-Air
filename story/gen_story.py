@@ -9,7 +9,7 @@ def bytes_(name,v,per=32):
     o.write(f'{name}:\n')
     for i in range(0,len(v),per): o.write('  .byte '+','.join(str(x) for x in v[i:i+per])+'\n')
 # ---- tiles: 0 blank, 1-10 frame and stars, 32-127 font, 128+ portraits
-T=dict(TL=1,TR=2,BL=3,BR=4,H=5,V=6,STAR=7,DIM=8,MORE=9,ARROW=10)
+T=dict(TL=1,TR=2,BL=3,BR=4,H=5,V=6,STAR=7,DIM=8,MORE=9,ARROW=10,FIGHTER=11,WRECK=12)
 def tile(rows,colour=1):
     p=[0]*8;q=[0]*8
     for y,r in enumerate(rows):
@@ -27,7 +27,9 @@ misc=[tile(r) for r in (
  ['........','...#....','........','.#...#..','........','........','...#....','........'],
  ['........','........','..+.....','........','.....+..','........','........','........'],
  ['........','.#####..','..###...','...#....','........','........','........','........'],
- ['.#......','.##.....','.###....','.####...','.###....','.##.....','.#......','........'])]
+ ['.#......','.##.....','.###....','.####...','.###....','.##.....','.#......','........'],
+ ['...#....','..###...','..###...','.#####..','#######.','#.###.#.','..#.#...','........'],
+ ['........','..+.....','...+.+..','.+..+...','..+..+..','.+...+..','...+....','........'])]
 o.write('.segment "ASSETS"\nstoryMisc:\n')
 for m in misc: o.write('  .byte '+','.join(map(str,m))+'\n')
 font=[]
@@ -51,7 +53,7 @@ for n,g,e in PORTRAITS:
 assert len(uniq)<=128,len(uniq)
 print('portrait tiles',len(uniq),'bytes',len(data))
 o.write(f'PORT_TILES={len(uniq)}\n'); bytes_('storyPort',data)
-o.write('.segment "MATH"\n'); bytes_('portMap',sum(maps,[]),36)
+o.write('.segment "HIGH2"\n'); bytes_('portMap',sum(maps,[]),36)
 names={'hale':'HALE','voss':'CMDR. VOSS','mara':'MARA DRAY','ren':'REN OKAFOR','log':'VIGIL LOG','teller':'JUN TELLER'}
 bytes_('portPal',sum([list(PAL[n]) for n,_,_ in PORTRAITS],[]),3)
 nm=[]
@@ -84,10 +86,11 @@ for y in range(4,10,2):
 bytes_('storyRuns',runs+[0])
 bytes_('storyAttr',attr)
 # ---- the script
-OP=dict(END=0,SPEAK=1,NL=2,PAGE=3,CHOICE=4,FLAG=5,GOTO=6,FLY=7,SAVE=8,LOAD=9,IF=10,LOC=11,CLEAR=12,TITLE=13,CHAPTER=14,LOST=15,SPARE=16,FLAG2=17,IF2=18)
-P={'HALE':0,'HALE_S':1,'VOSS':2,'VOSS_H':3,'MARA':4,'MARA_H':5,'REN':6,'LOG':7,'TELLER':8}
-LOCS=['BRIEFING ROOM','FLIGHT DECK','CREW BAR','VIGIL LOG','THE ARRAY']
-o.write('.segment "MATH"\n')
+OP=dict(END=0,SPEAK=1,NL=2,PAGE=3,CHOICE=4,FLAG=5,GOTO=6,FLY=7,SAVE=8,LOAD=9,IF=10,LOC=11,CLEAR=12,TITLE=13,CHAPTER=14,LOST=15,SPARE=16,FLAG2=17,IF2=18,MUSIC=19,CALL=20,RET=21,FIGHTERS=22)
+MUS=dict(TITLE=1,OVER=2,VIGIL=3,SIGNAL=4,CORVANE=5,HOME=6,STOP=128)
+P={'HALE':0,'HALE_S':1,'VOSS':2,'VOSS_H':3,'MARA':4,'MARA_H':5,'REN':6,'LOG':7,'TELLER':8,'MARA_S':9,'REN_S':10}
+LOCS=['BRIEFING ROOM','FLIGHT DECK','CREW BAR','VIGIL LOG','THE ARRAY','HANGAR']
+o.write('.segment "HIGH2"\n')
 bytes_('locNames',sum([[ord(c) for c in l.center(13)] for l in LOCS],[]),13)
 W,LINES=26,4
 total=0
@@ -103,7 +106,11 @@ def say(who,text):
 def ask(who,prompt,a,la,bb,lb):
     b(OP['SPEAK'],P[who]); o.write(f'  .byte "{prompt}",{OP["NL"]}\n'); b(OP['CHOICE']); o.write(f'  .word {la},{lb}\n')
     o.write(f'  .byte "{a}",{OP["NL"]}\n  .byte "{bb}",{OP["NL"]}\n')
-def loc(i): b(OP['LOC'],i)
+def loc(i):
+    b(OP['LOC'],i)
+    if i==0: b(OP['MUSIC'],MUS['VIGIL'])
+    if i in (2,4): b(OP['MUSIC'],MUS['SIGNAL'])
+def hangar(): b(OP['CALL'],5); o.write('  .word hangar\n')
 def goto(l): b(OP['GOTO']); o.write(f'  .word {l}\n')
 FL_CORVANE,FL_GHOST,FL_ESCAPED,FL_CONVOY,FL_TRUST_REN=1,2,4,8,16
 # second flags byte
@@ -161,7 +168,7 @@ say('MARA_H','Then somebody is playing games with a dead channel. Leave it alone
 b(OP['SAVE'],0)
 b(OP['CHAPTER'],4); o.write('  .word sceneM2\n')
 o.write('.segment "SCRIPT2"\n')
-label('sceneM2'); loc(0)
+label('sceneM2'); hangar(); loc(0)
 say('VOSS','Serrath convoy at Tarn Gap. Two freighters, light escort.')
 say('VOSS_H','We run on what we steal. Cripple the cargo haulers and the salvage crew does the rest.')
 say('HALE','Stealing lunch from the enemy. I joined the right squadron.')
@@ -191,7 +198,7 @@ say('MARA_H','Teller is dead. I watched it happen, and I do not need a ghost sto
 say('MARA','Whoever is doing this, they took that voice from somewhere. I want to know where.')
 say('HALE_S','Six, if that really is Teller, then what did we leave out there?')
 b(OP['SAVE'],1)
-label('sceneM3'); loc(0)
+label('sceneM3'); hangar(); loc(0)
 say('VOSS','An old Concord relay buoy at Kesh woke up last night.')
 say('VOSS_H','It is broadcasting on Lantern codes. Anyone listening could trace it to us.')
 say('REN','Sir, if the voice is using that buoy, I could learn where it comes from.')
@@ -228,7 +235,7 @@ label('m3Voss')
 say('REN','Then go and tell him. I thought you of all people would want to know.')
 label('m3Save')
 b(OP['SAVE'],2)
-label('m4Start')
+label('m4Start'); hangar()
 b(OP['IF'],FL_TRUST_REN); o.write('  .word scene4A\n'); goto('scene4B')
 
 # ---- Mission 4A: Open Channel
@@ -239,7 +246,7 @@ say('HALE_S','Bring her back in one piece, Six.')
 say('REN','Keep them off the shuttle. I will do the listening.')
 b(OP['FLY'],4); o.write('  .word m4aWin,m4aLose\n')
 label('m4aLose'); b(OP['FLAG2'],F2_REN_HURT); loc(1)
-say('REN','Six... my head. It was like all of them were shouting at once.')
+say('REN_S','Six... my head. It was like all of them were shouting at once.')
 say('HALE_S','She is bleeding, Six. Get her to the medbay.')
 goto('m4aAfter')
 label('m4aWin'); loc(1)
@@ -278,7 +285,7 @@ label('m4Save')
 b(OP['SAVE'],3)
 
 # ---- Mission 5: Old Habits
-label('sceneM5'); loc(0)
+label('sceneM5'); hangar(); loc(0)
 say('VOSS','A Serrath picket has found our hiding place. If it reports, we are finished.')
 say('VOSS_H','Every fighter flies. Nobody comes home until that picket is silent.')
 b(OP['IF'],FL_TRUST_REN); o.write('  .word m5Grounded\n'); goto('m5Hale')
@@ -313,18 +320,18 @@ b(OP['IF2'],F2_REN_HURT); o.write('  .word m5Hurt\n')
 say('REN','It flew like her, Six. I heard it in the static too.')
 goto('m5Save')
 label('m5Hurt')
-say('REN','My head still rings, Six. But I can hear them more clearly now.')
+say('REN_S','My head still rings, Six. But I can hear them more clearly now.')
 goto('m5Save')
 label('m5Apology')
 say('REN','...')
 ask('LOG','You find Ren alone.','I am sorry.','m5Sorry','Say nothing.','m5Save')
 label('m5Sorry'); b(OP['FLAG2'],F2_REN_OK)
-say('REN','Thank you. I have not slept, Six. The voices are louder every night.')
+say('REN_S','Thank you. I have not slept, Six. The voices are louder every night.')
 label('m5Save')
 b(OP['SAVE'],4)
 
 # ---- Mission 6: The Ledger
-label('sceneM6'); loc(0)
+label('sceneM6'); hangar(); loc(0)
 say('VOSS','Long range picked up a wreck drifting into the Vey lane. Concord registry: Ashgrove.')
 say('REN','Ashgrove was an intelligence ship, Commander. She was at Corvane.')
 say('VOSS_H','... Then we strip her before the Serrath do. Okafor, you are cleared to fly.')
@@ -341,7 +348,7 @@ say('REN','We got out with part of it. Enough. But we left two fighters behind.'
 goto('m6Truth')
 label('m6Win'); loc(1)
 say('REN','I have it. All of it.')
-label('m6Truth'); loc(0)
+label('m6Truth'); loc(0); b(OP['MUSIC'],MUS['SIGNAL'])
 say('REN','These are the Ashgrove\'s orders. Concord intelligence found the Array before the battle.')
 say('REN','Commander Voss was part of that operation.')
 say('MARA_H','And the retreat? Who ordered it?')
@@ -366,7 +373,7 @@ label('m6Ren')
 say('REN','Then we go quietly. I know a way past the picket.')
 label('m6Save')
 b(OP['SAVE'],5)
-label('m7Start')
+label('m7Start'); hangar()
 b(OP['IF2'],F2_VOSS_PLAN); o.write('  .word scene7A\n'); goto('scene7B')
 
 # ---- Mission 7A: Mutiny Watch
@@ -384,7 +391,7 @@ say('VOSS','They are standing down. They will follow us to Corvane, under guard.
 label('m7aAfter'); loc(0)
 say('VOSS','I gave them everything. The orders, the retreat, my name.')
 say('VOSS_H','Dray, the flight group is yours. I am done giving orders.')
-say('MARA','... Understood, sir. Commander.')
+say('MARA_S','... Understood, sir. Commander.')
 say('REN','Corvane, then. All of us.')
 goto('m7Save')
 
@@ -425,8 +432,17 @@ b(OP['SAVE'],6)
 b(OP['CHAPTER'],5); o.write('  .word sceneM8\n')
 
 o.write('.segment "SCRIPT3"\n')
+# ---- the hangar: spare fighters and who is missing, before each chapter
+label('hangar'); loc(5); b(OP['MUSIC'],MUS['VIGIL']); b(OP['FIGHTERS'])
+b(OP['SPEAK'],P['LOG']); o.write('  .byte "Spare fighters: "\n'); b(OP['SPARE']); o.write(f'  .byte ".",{OP["NL"]}\n')
+b(OP['IF2'],F2_HALE_LOST); o.write('  .word hgHale\n'); goto('hgRen')
+label('hgHale'); o.write('  .byte "Hale\'s berth is empty.",'+str(OP['NL'])+'\n')
+label('hgRen')
+b(OP['IF2'],F2_REN_LOST); o.write('  .word hgRenOut\n'); goto('hgDone')
+label('hgRenOut'); o.write('  .byte "Ren lies in the medbay.",'+str(OP['NL'])+'\n')
+label('hgDone'); b(OP['PAGE']); b(OP['RET'])
 # ---- Mission 8: Corvane
-label('sceneM8'); loc(0)
+label('sceneM8'); hangar(); loc(0); b(OP['MUSIC'],MUS['CORVANE'])
 say('VOSS','Corvane. Where the Lanterns died, and where they are still flying.')
 b(OP['SPEAK'],P['LOG']); o.write('  .byte "Spare fighters: "\n'); b(OP['SPARE']); o.write(f'  .byte ".",{OP["NL"]}\n'); b(OP['PAGE'])
 b(OP['IF2'],F2_PATROL); o.write('  .word m8Patrol\n'); goto('m8Ren')
@@ -434,7 +450,7 @@ label('m8Patrol')
 say('VOSS','The Concord patrol will take the outer guard. They owe us that much.')
 label('m8Ren')
 b(OP['IF2'],F2_REN_LOST); o.write('  .word m8RenGone\n')
-say('REN','I can hear all of them now. Teller is calling you in, Six.')
+say('REN_S','I can hear all of them now. Teller is calling you in, Six.')
 goto('m8Wing')
 label('m8RenGone')
 say('MARA_H','Ren is still in the medbay. She has not woken.')
@@ -481,34 +497,34 @@ label('m8RenOk')
 ask('LOG','How do you save them?','Tell the world.','endHome','Stay and guard them.','endVigil')
 
 # ---- Silence
-label('endSilence'); loc(4)
+label('endSilence'); loc(4); b(OP['MUSIC'],MUS['STOP'])
 say('LOG','You fire into the core. The voices fall silent, one by one.')
 say('TELLER','... Thank you, Six.')
 say('LOG','Across the whole front, the Serrath drones go dark.')
 b(OP['IF2'],F2_HALE_LOST); o.write('  .word sMara\n')
 say('HALE_S','So that is it. We stay dead, then. I will write her a letter she never gets.')
 label('sMara')
-say('MARA','Teller is free. That is enough for me.')
+say('MARA_S','Teller is free. That is enough for me.')
 say('VOSS','The Lanterns died at Corvane. Let the record say so.')
 goto('theEnd')
 
 # ---- Homecoming
-label('endHome'); loc(4)
+label('endHome'); loc(4); b(OP['MUSIC'],MUS['HOME'])
 say('LOG','Ren opens the channel. Every echo speaks at once, on every Concord band.')
 say('REN','They are hearing it, Six. All of it. The orders. The names.')
 say('VOSS','Then the war ends with the truth. And I stand trial for my part.')
 b(OP['IF2'],F2_HALE_LOST); o.write('  .word hMara\n')
 say('HALE','I am going home, Six. My daughter is going to hate this beard.')
 label('hMara')
-say('MARA','I will tell Teller\'s family myself.')
+say('MARA_S','I will tell Teller\'s family myself.')
 say('LOG','The Lanterns come home.')
 goto('theEnd')
 
 # ---- The Long Vigil
-label('endVigil'); loc(4)
+label('endVigil'); loc(4); b(OP['MUSIC'],MUS['HOME'])
 say('LOG','The Vigil takes station beside the Array.')
 say('VOSS','One last command, then. We guard them.')
-say('MARA','Teller is here. I am not leaving her again.')
+say('MARA_S','Teller is here. I am not leaving her again.')
 b(OP['IF2'],F2_HALE_LOST); o.write('  .word vHaleGone\n')
 say('HALE','Someone has to keep the coffee hot.')
 goto('vRen')

@@ -148,17 +148,59 @@ text('textTitle',[('DEAD AIR',34,7,3,16),('PRESS START',36,104,2,11)])
 text('textWin',[('MISSION',60,44,3,16),('COMPLETE',36,70,3,16)])
 text('textLose',[('SHIELDS',60,44,3,16),('DOWN',84,70,3,16)])
 text('textOver',[('GAME OVER',24,44,3,16),('PRESS START',36,104,2,11)])
-# ---- music: triangle, one note per step ----
-def tri(m):
-    hz=440*2**((m-69)/12); return round(CPU/(32*hz)-1)
-NOTES=sorted(set([33,40,45,41,48,53,36,43,52,38,50,57,28]))
-ix={m:i+1 for i,m in enumerate(NOTES)}
-o.write('noteLo: .byte 0,'+','.join(str(tri(m)&255) for m in NOTES)+'\n')
-o.write('noteHi: .byte 0,'+','.join(str(tri(m)>>8) for m in NOTES)+'\n')
+# ---- music: two voices (triangle bass, pulse 1 melody), one step per tempo tick ----
+# Step = 2 bytes (triangle, pulse): 0 rest, 1-72 note (MIDI 24-95), 253 hold, 254 loop, 255 end.
+HOLD,LOOP,END=253,254,255
+def hz(m): return 440*2**((m-69)/12)
+NOTEMIN=24
+tri=[0]+[min(2047,round(CPU/(32*hz(m))-1)) for m in range(NOTEMIN,96)]
+pul=[0]+[min(2047,round(CPU/(16*hz(m))-1)) for m in range(NOTEMIN,96)]
+NAMES={'C':0,'C#':1,'Db':1,'D':2,'D#':3,'Eb':3,'E':4,'F':5,'F#':6,'Gb':6,'G':7,'G#':8,'Ab':8,'A':9,'A#':10,'Bb':10,'B':11}
+def nt(tok):
+    if tok=='.': return 0
+    if tok=='-': return HOLD
+    name,octv=tok[:-1],int(tok[-1])
+    m=12*(octv+1)+NAMES[name]; assert NOTEMIN<=m<96,tok
+    return m-NOTEMIN+1
+def track(bass,mel):
+    b=' '.join(bass).split(); m=' '.join(mel).split()
+    assert len(b)==len(m),(len(b),len(m))
+    out=[]
+    for x,y in zip(b,m): out+=[nt(x),nt(y)]
+    return out
+def mtab(name,vals): o.write(f'{name}: .byte '+','.join(str(v) for v in vals)+'\n')
+# 1 title: the original triangle line, no melody
 def bar(r): return [r,r+12,0,r,r+7,0,r+12,r+7]
-title=bar(33)+bar(33)+bar(41-12+12-0 if 0 else 41)+bar(36)+bar(33)+bar(33)+bar(38)+[40,52,0,40,47 if 0 else 52,0,40,52]
-o.write('musTitle: .byte '+','.join(str(ix[n] if n else 0) for n in title)+',254\n')
-o.write('musOver: .byte '+','.join(str(ix[n]) for n in (52,50,48,45,40,33))+',255\n')
+old=bar(33)+bar(33)+bar(41)+bar(36)+bar(33)+bar(33)+bar(38)+[40,52,0,40,52,0,40,52]
+TITLE=sum([[n-NOTEMIN+1 if n else 0,0] for n in old],[])+[LOOP]
+# 2 game over sting
+OVER=sum([[n-NOTEMIN+1,0] for n in (52,50,48,45,40,33)],[])+[END]
+# 3 Vigil: briefings. D minor, Dm Bb F C
+VIGIL=track(['D2 - - - A2 - - -','Bb1 - - - F2 - - -','F2 - - - C3 - - -','C2 - - - G2 - - -']*2,
+ ['A4 - - - F4 - G4 -','F4 - - - D4 - E4 -','C5 - - - A4 - Bb4 -','G4 - - - - - . .',
+  'D5 - - - C5 - A4 -','Bb4 - - - A4 - F4 -','A4 - - - G4 - F4 -','E4 - - - - - . .'])+[LOOP]
+# 4 Signal: the bar, the voice. Sparse, a semitone rubbing against A minor
+SIGNAL=track(['A1 - - - - - - -','A1 - - - - - - -','F1 - - - - - - -','E1 - - - - - - -'],
+ ['. . E5 - . . F5 -','. . E5 - D#5 - - -','. . C5 - . . B4 -','. . . . . . . .'])+[LOOP]
+# 5 Corvane: the finale. Driving eighths under a minor call
+CORVANE=track(['D2 D3 D2 D3 D2 D3 C3 D3','Bb1 Bb2 Bb1 Bb2 Bb1 Bb2 A2 Bb2','C2 C3 C2 C3 C2 C3 Bb2 C3','A1 A2 A1 A2 A1 A2 G2 A2']*2,
+ ['D5 - - - A4 - - -','F5 - E5 - D5 - - -','G5 - - - F5 - E5 -','E5 - - - C#5 - - -',
+  'D5 - - - F5 - - -','A5 - G5 - F5 - - -','E5 - - - G5 - - -','A5 - - - - - . .'])+[LOOP]
+# 6 Home: the endings. D major, the lift
+HOME=track(['D2 - - - A2 - - -','A1 - - - E2 - - -','B1 - - - F#2 - - -','G1 - - - D2 - - -']*2,
+ ['F#4 - A4 - D5 - - -','E5 - - - C#5 - A4 -','D5 - - - B4 - F#4 -','G4 - A4 - B4 - - -',
+  'A4 - B4 - D5 - - -','E5 - F#5 - E5 - - -','D5 - C#5 - B4 - - -','A4 - - - - - - -'])+[LOOP]
+TRACKS=[('TITLE',TITLE,10),('OVER',OVER,14),('VIGIL',VIGIL,9),('SIGNAL',SIGNAL,12),('CORVANE',CORVANE,7),('HOME',HOME,9)]
+o.write('.segment "HIGH2"\n')
+mtab('triLo',[v&255 for v in tri]); mtab('triHi',[v>>8 for v in tri])
+mtab('pulLo',[v&255 for v in pul]); mtab('pulHi',[v>>8 for v in pul])
+for n,d,_ in TRACKS: mtab('mus'+n,d)
+o.write('trackLo: .byte 0,'+','.join(f'<mus{n}' for n,_,_ in TRACKS)+'\n')
+o.write('trackHi: .byte 0,'+','.join(f'>mus{n}' for n,_,_ in TRACKS)+'\n')
+o.write('trackTempo: .byte 0,'+','.join(str(t) for _,_,t in TRACKS)+'\n')
+for i,(n,_,_) in enumerate(TRACKS): o.write(f'MUS_{n}={i+1}\n')
+o.write(f'MUS_HOLD={HOLD}\nMUS_LOOP={LOOP}\nMUS_END={END}\n')
+o.write('.segment "MATH"\n')
 # ---- radio: one line of up to 24 capitals under the view ----
 FONTROM=open(os.path.expanduser('~/tools/cc65/libsrc/nes/nestiles.chr'),'rb').read()
 RC="ABCDEFGHIJKLMNOPQRSTUVWXYZ.,!?':"

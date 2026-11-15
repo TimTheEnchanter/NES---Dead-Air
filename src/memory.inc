@@ -257,6 +257,11 @@ padNew: .res 1
 startLatch: .res 1
 overT: .res 1
 musReq: .res 1
+musCur: .res 1
+retBank: .res 1
+portHigh: .res 1
+retPtr: .res 2
+musStart: .res 2
 musWait: .res 1
 musLen: .res 1
 confirmLatch: .res 1
