@@ -33,10 +33,10 @@ main:
   sta prevCnt
   sta jobCnt
 @frame:
-  lda bufFree
-  beq @frame
+  ; game logic and 3D math for this frame run while the last frame's tiles
+  ; are still uploading; the first new tile waits for the buffer (wait_buf)
   lda #0
-  sta bufFree
+  sta gateOpen
   MARK 1
   jsr clear_map
   MARK 2
@@ -113,7 +113,7 @@ main:
   bne @near            ; large hulls need true perspective
   lda relZ+1
   bmi @near
-  cmp #3
+  cmp #FAR_HI          ; beyond FAR_HI*256 units, one shared depth will do
   bcc @near
   jsr transform_far
   jmp @xdone
@@ -221,6 +221,10 @@ main:
   lda shields
   sta statShields
   ; hand off to the interrupt side
+  lda gateOpen         ; a frame with no tiles still waits its turn
+  bne :+
+  jsr wait_buf
+:
   jsr tint_send
   lda nextTile
   sta jobCnt

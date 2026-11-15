@@ -1,35 +1,19 @@
 .segment "CODE"
-; ---------- tile stepping ----------
-; mptr tracks the current map cell. All routines return the cell's tile in Y,
-; allocating one on first touch, and preserve X.
-tileRight:
-  inc mptr
-  jmp lookNow
-tileLeft:
-  dec mptr
-  jmp lookNow
-tileDown:
-  lda mptr
-  clc
-  adc #32
-  sta mptr
-  bcc lookNow
-  inc mptr+1
-  jmp lookNow
-tileUp:
-  lda mptr
-  sec
-  sbc #32
-  sta mptr
-  bcs lookNow
-  dec mptr+1
+; ---------- tile lookup ----------
+; mptr tracks the current map cell. lookNow returns the cell's tile in Y,
+; allocating one on first touch, and preserves X. The line blocks in
+; lines.inc inline the lookup and call lookAlloc (Y = 0) or allocX only for
+; a cell with no tile yet.
 lookNow:
   ldy #0
   lda (mptr),y
-  beq @alloc
+  beq lookAlloc
   tay
   rts
-@alloc:
+lookAlloc:
+  lda gateOpen
+  beq @gate
+@go:
   stx saveX
   ldx nextTile
   cpx #RADIO_TILE      ; the radio font lives above this
@@ -43,6 +27,15 @@ lookNow:
   sec
   sbc #MAP/256-$20
   sta (lpHi),y
+.ifdef DEBUG
+  cmp #$20
+  bcc @bad
+  cmp #$24
+  bcc @okHi
+@bad:
+  inc dbgBad
+@okHi:
+.endif
   lda #0
   sta PAT+$000,x
   sta PAT+$100,x
@@ -59,28 +52,55 @@ lookNow:
   ldy #$FF        ; scratch tile: drawn into, never displayed
   ldx saveX
   rts
+@gate:
+  jsr wait_buf
+  jmp @go
 
-; Prepares one tile-wide segment of an x-major line. In: segS, cnt.
-; Out: X = pixels in segment, segL = its last bit.
-segInit:
-  lda #8
-  sec
-  sbc segS
-  cmp cnt
-  bcc :+
-  lda cnt
-:
+; Waits until the interrupt side has uploaded the last frame's tiles, then
+; claims the tile buffer for this frame. Keeps X and Y.
+wait_buf:
+@w:
+  lda bufFree
+  beq @w
+  lda #0
+  sta bufFree
+  lda #1
+  sta gateOpen
+  rts
+
+; allocX: lookAlloc for the x-major blocks, which keep the tile in X and
+; the pixel count in Y.
+allocX:
+  sty saveY
+  ldy #0
+  jsr lookAlloc
+  tya
   tax
-  sta u0
+  ldy saveY
+  rts
+
+; Next tile-wide segment of an x-major line, starting at bit 0.
+; Out: Y = pixels in it, mrp set for its last bit, prev = 0, cnt reduced.
+segNext:
+  lda #0
+  sta prev
   lda cnt
-  sec
-  sbc u0
+  cmp #8
+  bcc @short
+  sbc #8
   sta cnt
-  lda segS
-  clc
-  adc u0
-  sta segL
-  dec segL
+  ldy #8
+  lda #<maskQ          ; last bit 7
+  sta mrp
+  rts
+@short:
+  tay
+  lda #<(maskQ+8)      ; last bit cnt-1
+  sec
+  sbc cnt
+  sta mrp
+  lda #0
+  sta cnt
   rts
 
 .include "lines.inc"
@@ -127,14 +147,37 @@ xmajor:
   inx
   stx cnt
   jsr start
+  sty saveX            ; the tile, held in X by the blocks
+  lda #>maskQ
+  sta mrp+1
+  ; first segment: from bit x0&7 to the tile edge or the line's end
   lda x0
   and #7
-  sta segS
-  jsr segInit
+  tay
+  lda maskL,y
+  eor #$FF
+  sta prev             ; bits left of the first pixel count as drawn
+  sty u0
+  lda #8
+  sec
+  sbc u0
+  cmp cnt
+  bcc :+
+  lda cnt
+: sta u1               ; pixels in the segment
+  lda cnt
+  sec
+  sbc u1
+  sta cnt
+  lda #<(maskQ+8)      ; mrp = maskQ + 7 - last bit
+  sec
+  sbc u0
+  sec
+  sbc u1
+  sta mrp
   lda y0
   and #7
   asl a
-  stx saveX
   tax
   lda y1
   cmp y0
@@ -143,14 +186,15 @@ xmajor:
   sta vecM
   lda xuTab+1,x
   sta vecM+1
-  ldx saveX
-  jmp (vecM)
+  jmp xGo
 xd:
   lda xdTab,x
   sta vecM
   lda xdTab+1,x
   sta vecM+1
+xGo:
   ldx saveX
+  ldy u1
   jmp (vecM)
 ymajor:
   ; order top to bottom
@@ -194,6 +238,7 @@ yr:
 yGo:
   ldx dy
   inx
+  sec                  ; the blocks keep carry set between pixels
   jmp (vecM)
 start:
   lda y0

@@ -29,7 +29,10 @@ play_sfx:
   sta sndPtr+ch*2
   lda sfxHi,x
   sta sndPtr+ch*2+1
+  cpx #8               ; the stats keep seven counters; story flags follow
+  bcs :+
   inc statSnd-1,x
+:
 .if pulseHi
   lda #$FF
   sta sndHi+ch
@@ -116,6 +119,7 @@ radio_tick:
   sta radioReq
   ldy #220
   sty radioT
+  sty radioBusy
   ldx #0
   lda #$22
   jsr radio_row
@@ -127,6 +131,8 @@ radio_tick:
   beq @done
   dec radioT
   bne @done
+  lda #1
+  sta radioBusy
   ldx #$FF             ; clear both nametables
   lda #$22
   jsr radio_row

@@ -1,6 +1,12 @@
 
 nmi:
   pha
+.ifdef DEBUGNEST              ; moves the picture: timing checks leave it out
+  lda dbgIn
+  beq :+
+  inc dbgNest
+:
+.endif
   lda storyFlag
   beq :+
   jmp story_nmi
@@ -40,9 +46,9 @@ nmi:
   sta PPUADDR
   lda #$01
   sta PPUADDR
-  lda palA,x
+  lda palRA,x          ; same cycles as the ROM tables: absolute,x
   sta PPUDATA
-  lda palB,x
+  lda palRB,x
   sta PPUDATA
   ; leave palette space, or forced-blank lines would show this colour
   lda #0
@@ -118,6 +124,10 @@ done:
 irq:
   pha
   sta $E000            ; ack and disable
+.ifdef DEBUGNEST
+  lda #1
+  sta dbgIn
+.endif
   lda #0
   sta PPUMASK          ; forced blank starts here
   txa
@@ -136,6 +146,17 @@ irq:
   sta bud
   lda #>(BUD_A-ATTR_COST)
   sta bud+1
+: lda radioBusy        ; the radio row's writes come out of the same time
+  beq :+
+  lda #0
+  sta radioBusy
+  lda bud
+  sec
+  sbc #<RADIO_COST
+  sta bud
+  lda bud+1
+  sbc #>RADIO_COST
+  sta bud+1
 : jsr run_xfer
   lda xfState
   cmp #ST_ATTR
@@ -145,6 +166,10 @@ irq:
   sta xfState
 :
   jsr tint_palette     ; the tint palette follows the coming flip
+.ifdef DEBUGNEST
+  lda #0
+  sta dbgIn
+.endif
   pla
   tay
   pla
@@ -154,6 +179,35 @@ irq:
 
 palA: .byte $30,$0F
 palB: .byte $0F,$30
+.assert <palRA < $FF, error, "palRA must not cross a page: the NMI's timing counts on it"
+.assert <palRB < $FF, error, "palRB must not cross a page: the NMI's timing counts on it"
+FLASH_COL = $27          ; Lantern Two: the past, drawn in amber
+; Rendering off: colour 3 (both bitplanes: line overlaps, the radio font)
+; follows the line colour, so the flashback is amber throughout.
+flash_idx3:
+  lda missionId
+  cmp #M_LANTERN2
+  bne :+
+  lda #$3F
+  sta PPUADDR
+  lda #$03
+  sta PPUADDR
+  lda #FLASH_COL
+  sta PPUDATA
+: rts
+; Line colours for this mission: white, or amber for the flashback.
+line_colour:
+  ldx #$30
+  lda missionId
+  cmp #M_LANTERN2
+  bne :+
+  ldx #FLASH_COL
+: stx palRA
+  stx palRB+1
+  lda #$0F
+  sta palRA+1
+  sta palRB
+  rts
 TINT = $2C              ; the echo drone's colour
 palC: .byte TINT,$0F
 palD: .byte $0F,TINT
@@ -338,6 +392,7 @@ reset:
   inx
   cpx #32
   bne :-
+  jsr flash_idx3       ; Lantern Two: overlaps and radio text in amber too
   lda #0
   sta PPUSCROLL
   sta PPUSCROLL
@@ -358,6 +413,10 @@ reset:
 .ifdef TESTM
   lda #TESTM
   sta missionId
+.endif
+.ifdef TESTEASY
+  lda #1
+  sta difficulty
 .endif
   jsr new_game
 .ifdef AUTOSTART

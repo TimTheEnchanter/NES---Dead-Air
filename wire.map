@@ -1,0 +1,62 @@
+Modules list:
+-------------
+wire.o:
+    CODE              Offs=000000  Size=001F00  Align=00001  Fill=0000
+    BSS               Offs=000000  Size=000404  Align=00001  Fill=0000
+    ZEROPAGE          Offs=000000  Size=0000FF  Align=00001  Fill=0000
+    HEADER            Offs=000000  Size=000010  Align=00001  Fill=0000
+    STATS             Offs=000000  Size=000038  Align=00001  Fill=0000
+    WRAM              Offs=000000  Size=001200  Align=00001  Fill=0000
+    SAVE              Offs=000000  Size=00001B  Align=00001  Fill=0000
+    MATH              Offs=000000  Size=001DE3  Align=00001  Fill=0000
+    HIGH2             Offs=000000  Size=000965  Align=00001  Fill=0000
+    RADIO             Offs=000000  Size=000B2E  Align=00001  Fill=0000
+    ASSETS            Offs=000000  Size=000D31  Align=00001  Fill=0000
+    SCRIPT1           Offs=000000  Size=000A96  Align=00001  Fill=0000
+    SCRIPT2           Offs=000000  Size=000EE6  Align=00001  Fill=0000
+    SCRIPT4           Offs=000000  Size=00102B  Align=00001  Fill=0000
+    SCRIPT3           Offs=000000  Size=000D2B  Align=00001  Fill=0000
+    FLIGHT            Offs=000000  Size=001B82  Align=00001  Fill=0000
+    HIGH              Offs=000000  Size=000F6D  Align=00001  Fill=0000
+    LOOPS             Offs=000000  Size=0001C6  Align=00040  Fill=0000
+    VECTORS           Offs=000000  Size=000006  Align=00001  Fill=0000
+
+
+Segment list:
+-------------
+Name                   Start     End    Size  Align
+----------------------------------------------------
+HEADER                000000  00000F  000010  00001
+ZEROPAGE              000000  0000FE  0000FF  00001
+STATS                 000300  000337  000038  00001
+BSS                   000340  000743  000404  00001
+WRAM                  006000  0071FF  001200  00001
+SAVE                  007F00  007F1A  00001B  00001
+MATH                  008000  009DE2  001DE3  00001
+ASSETS                00A000  00AD30  000D31  00001
+FLIGHT                00A000  00BB81  001B82  00001
+RADIO                 00A000  00AB2D  000B2E  00001
+SCRIPT1               00A000  00AA95  000A96  00001
+SCRIPT2               00A000  00AEE5  000EE6  00001
+SCRIPT3               00A000  00AD2A  000D2B  00001
+SCRIPT4               00A000  00B02A  00102B  00001
+CODE                  00C000  00DEFF  001F00  00001
+HIGH                  00E000  00EF6C  000F6D  00001
+LOOPS                 00F000  00F1C5  0001C6  00040
+HIGH2                 00F1C6  00FB2A  000965  00001
+VECTORS               00FFFA  00FFFF  000006  00001
+
+
+Exports list by name:
+---------------------
+
+
+
+Exports list by value:
+----------------------
+
+
+
+Imports list:
+-------------
+

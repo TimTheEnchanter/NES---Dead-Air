@@ -61,6 +61,10 @@ ST_ATTR=5               ; tint squares wait to be written below the picture
 BUD_B = 4485
 .endif
 BUD_A = 8100
+.ifndef FAR_HI
+FAR_HI = 3               ; ships from FAR_HI*256 units out use transform_far (2 or more)
+.endif
+RADIO_COST = 850        ; IRQ cycles the radio row takes from BUD_A
 IRQ_LINES = 134         ; picture plus the radio line
 .ifndef K_NT
 K_NT=268
@@ -104,10 +108,12 @@ K_NEXT=125
 .include "src/mission4.inc"
 .include "src/radio.inc"
 .include "src/music.inc"
+.include "src/difficulty.inc"
 .include "src/draw.inc"
 .include "src/ai.inc"
 .include "src/mainloop.inc"
 .include "src/story_engine.inc"
+.include "src/chapters.inc"
 .include "src/xfer.inc"
 .include "src/sound.inc"
 .include "src/boot.inc"

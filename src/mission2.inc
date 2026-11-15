@@ -74,7 +74,13 @@ post2:
   sta protSlot
   lda #200
   sta protR
+  lda missionId        ; Six's fighter is smaller than a wreck
+  cmp #M_LANTERN2
   lda #WRECK_HP
+  bcc protHp
+  lda #SIX_HP
+protHp:
+  jsr easy_half        ; Easy: half again as tough
   sta shuttleHP
 : ldy #SP_FRE
   lda (spadP),y
@@ -222,6 +228,7 @@ guard_start:
   sta guardOn
   ldy #SP_LIMIT
   lda (spadP),y
+  jsr easy_more        ; Easy: more time to save him
   sta guardT+1
   lda #0
   sta guardT

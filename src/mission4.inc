@@ -3,6 +3,7 @@
 .segment "HIGH"
 DETECT_R = 350         ; picket sees you inside this cube
 WARN_R   = 600         ; Ren warns you inside this one
+DETECT_EASY = 260      ; Easy: pickets see less far
 
 ; A Concord fighter at its last hit is disabled, not killed: it drifts, and
 ; can no longer be hurt. It counts as done for the wave.
@@ -59,7 +60,7 @@ sneak_place:
   jsr picket_axis
   lda #1
   sta alive+HALE
-  lda #8
+  lda #PICKET_MODEL    ; a lancer hull, drawn in the mission's tint (red)
   sta shipModel+HALE
   lda #2
   sta hPassive+HALE
@@ -162,7 +163,9 @@ sneak_tick:
   bne :+
 @out:
   rts
-: lda sneakWarned
+:
+  jsr sneak_ping
+  lda sneakWarned
   bne @detect
   lda #<WARN_R
   sta t0
@@ -178,7 +181,10 @@ sneak_tick:
   jsr say_radio
 @detect:
   lda #<DETECT_R
-  sta t0
+  ldx difficulty
+  beq :+
+  lda #<DETECT_EASY
+: sta t0
   lda #>DETECT_R
   sta t1
   jsr near_picket
@@ -236,6 +242,48 @@ sneak_tick:
   sta mLimit+1
 @done:
   rts
+; Inside the warning range a ping repeats, faster the closer you are.
+sneak_ping:
+  lda #<WARN_R
+  sta t0
+  lda #>WARN_R
+  sta t1
+  jsr near_picket
+  bcs :+
+  rts
+: lda #40              ; vblanks between pings, far out
+  sta mU2
+  lda #<450
+  sta t0
+  lda #>450
+  sta t1
+  jsr near_picket
+  bcc :+
+  lda #20
+  sta mU2
+  lda #<380
+  sta t0
+  lda #>380
+  sta t1
+  jsr near_picket
+  bcc :+
+  lda #10
+  sta mU2
+: lda pingT
+  sec
+  sbc dt
+  sta pingT
+  bcc :+
+  cmp mU2              ; closing in: cut the wait short
+  bcc :++
+  lda mU2
+  sta pingT
+  rts
+: lda mU2
+  sta pingT
+  SFXREQ SFX_PING
+: rts
+
 launchX:  .byte <(-180),<180
 launchXH: .byte >(-180),>180
 .popseg

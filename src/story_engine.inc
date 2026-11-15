@@ -407,6 +407,15 @@ cursor:
 haveF2:
   lda saveArea+6
   sta storyFlags2
+  lda saveArea+8       ; older saves have no difficulty: Normal
+  eor #$5A
+  cmp saveArea+9
+  beq haveDiff
+  lda #0
+  sta saveArea+8
+haveDiff:
+  lda saveArea+8
+  sta difficulty
   lda saveArea+3
   asl a
   adc saveArea+3
@@ -552,6 +561,14 @@ haveF2:
   bne :+
   jsr draw_fighters    ; FIGHTERS
   jmp story_loop
+: cmp #23
+  bne :+
+  jsr next_byte        ; DIFF: 0 Normal, 1 Easy
+  sta difficulty
+  jmp story_loop
+: cmp #24
+  bne :+
+  jmp chapter_pick     ; CHAPSEL: chapter names, then two targets
 :
   cmp #12
   bne :+
@@ -677,15 +694,20 @@ write_save:
   sta saveArea+6
   eor #$A5
   sta saveArea+7
-  rts
+  lda difficulty
+  sta saveArea+8
+  eor #$5A
+  sta saveArea+9
+  lda saveArea+3
+  jmp snap_save        ; chapter select keeps each chapter's starting flags
 
 ; Chooses the scene that Start opens.
 pick_start:
   lda #BANK_SCRIPT
   sta scriptBank
-  lda #<sceneStart
+  lda #<doNew          ; no save: a new game, which asks for a difficulty
   sta resumePtr
-  lda #>sceneStart
+  lda #>doNew
   sta resumePtr+1
   lda #0
   sta storyFlags
@@ -720,8 +742,21 @@ pick_start:
   sta resumePtr
   lda #>menu
   sta resumePtr+1
+  ldx #0               ; finished: chapter select joins the menu
+  lda saveArea+3
+  cmp #7
+  beq @done
+  jsr story_done
+  bcc :+
+  ldx #2
+@done:
+  lda menuTab,x
+  sta resumePtr
+  lda menuTab+1,x
+  sta resumePtr+1
 :
   rts
+menuTab: .word menuDone,menuChap
 
 clear_box:
   lda #1
@@ -1037,6 +1072,7 @@ enter_flight:
   inx
   cpx #32
   bne :-
+  jsr flash_idx3       ; Lantern Two: overlaps and radio text in amber too
   ; forget all tiles
   lda #$68
   sta ptr+1

@@ -112,6 +112,10 @@ game_over:
   sta dt
   lda statNmi
   sta lastNmi
+.ifdef BENCH
+  lda #2               ; speed tests: the same world steps however fast it draws
+  sta dt
+.endif
   lda gameMode
   cmp #MODE_PLAY
   beq :+
@@ -692,7 +696,7 @@ boltHit:
   bcc :+
   dec shields
 :
-  dec shields
+  jsr take_hit
   bne :+
   jsr lose_shields
   rts
@@ -732,7 +736,7 @@ notBolt:
   sta bumpT
   inc statCrash
   SFXREQ SFX_CRASH
-  dec shields
+  jsr take_hit
   bne done
   jsr lose_shields
 done:
@@ -741,6 +745,7 @@ done:
 
 ; Fresh game: all ships back, full shields, back at the start.
 new_game:
+  jsr line_colour
   ldx #47
 : lda shipInitL,x
   sta shipPosL,x
@@ -1953,7 +1958,7 @@ hidden:
 .endproc
 
 ; rel + rounded t1. The world wraps at 4096 units, so this cannot overflow.
-.macro ADDSTORE base, lo, hi
+.macro ADDSTORE base, lo, hi, pv
   .local pos, noScale
   ldy #0
   lda t1
@@ -1975,15 +1980,24 @@ noScale:
   ldx vi
   adc base
   sta lo,x
+  sta pv
   lda u0
   adc base+1
   sta hi,x
+  sta pv+1
 .endmacro
 
 .proc transform
   ldx vFirst
 vloop:
   stx vi
+  lda vmask,x          ; only on hidden faces: never drawn, so skip it
+  and vis
+  bne :+
+  lda #1
+  sta behind,x
+  jmp next
+:
   ldy vxu,x
   TERM1 mat+0
   ldx vi
@@ -1992,7 +2006,7 @@ vloop:
   ldx vi
   ldy vzu,x
   TERMN mat+16
-  ADDSTORE relX, camXL, camXH
+  ADDSTORE relX, camXL, camXH, px
   ldx vi
   ldy vxu,x
   TERM1 mat+24
@@ -2002,7 +2016,7 @@ vloop:
   ldx vi
   ldy vzu,x
   TERMN mat+40
-  ADDSTORE relY, camYL, camYH
+  ADDSTORE relY, camYL, camYH, py
   ldx vi
   ldy vxu,x
   TERM1 mat+48
@@ -2012,21 +2026,8 @@ vloop:
   ldx vi
   ldy vzu,x
   TERMN mat+64
-  ADDSTORE relZ, camZL, camZH
-  ; project
-  ldx vi
-  lda camXL,x
-  sta px
-  lda camXH,x
-  sta px+1
-  lda camYL,x
-  sta py
-  lda camYH,x
-  sta py+1
-  lda camZL,x
-  sta pz
-  lda camZH,x
-  sta pz+1
+  ADDSTORE relZ, camZL, camZH, pz
+  ; project: ADDSTORE left the point in px, py, pz
   jsr project
   ldx vi
   bcc front
@@ -2135,6 +2136,13 @@ scale:
   ldx vFirst
 vloop:
   stx vi
+  lda vmask,x          ; only on hidden faces: never drawn
+  and vis
+  bne :+
+  lda #1
+  sta behind,x
+  jmp skipV
+:
   ldy vxu,x
   TERM1 mat+0
   ldx vi
@@ -2200,6 +2208,7 @@ vloop:
   sbc t1
   sta outY+1
   jsr storeVertex
+skipV:
   ldx vi
   inx
   cpx vEnd
@@ -2302,12 +2311,13 @@ ok:
   sta t1
   ldy rk
   beq done
-: lda t1
-  cmp #$80
-  ror t1
+  lda t1               ; the high byte stays in A while it shifts
+: cmp #$80
+  ror a
   ror t0
   dey
   bne :-
+  sta t1
   ; round to nearest using the last bit shifted out
   lda t0
   adc #0
@@ -2361,6 +2371,96 @@ done:
 .endmacro
 
 ; Clips the segment a-b to the view by bisection. Carry clear = visible.
+; Each pass moves the outside end onto one screen edge: a fixed number of
+; halvings (enough to bring the ends within a unit of each other), each
+; testing only that edge.
+.macro CLIPMID
+  lda ax
+  clc
+  adc ix
+  sta mx
+  lda ax+1
+  adc ix+1
+  cmp #$80
+  ror a
+  ror mx
+  sta mx+1
+  lda ay
+  clc
+  adc iy
+  sta my
+  lda ay+1
+  adc iy+1
+  cmp #$80
+  ror a
+  ror my
+  sta my+1
+.endmacro
+; one bisection loop per edge; `outside` branches when m is past the edge
+.macro CLIPLOOP name, test
+  .local lp, out, nxt
+name:
+lp:
+  CLIPMID
+  test out
+  lda mx               ; inside: m becomes the inside end
+  sta ix
+  lda mx+1
+  sta ix+1
+  lda my
+  sta iy
+  lda my+1
+  sta iy+1
+  dec guard2
+  bne lp
+  jmp clip2d::settled
+out:
+  lda mx
+  sta ax
+  lda mx+1
+  sta ax+1
+  lda my
+  sta ay
+  lda my+1
+  sta ay+1
+  dec guard2
+  bne lp
+  jmp clip2d::settled
+.endmacro
+.macro T_LEFT dst          ; x < 0
+  lda mx+1
+  bmi dst
+.endmacro
+.macro T_RIGHT dst         ; x >= 192
+  .local ok
+  lda mx+1
+  bmi ok
+  bne dst
+  lda mx
+  cmp #192
+  bcs dst
+ok:
+.endmacro
+.macro T_UP dst            ; y < 1
+  .local ok
+  lda my+1
+  bmi dst
+  bne ok
+  lda my
+  beq dst
+ok:
+.endmacro
+.macro T_DOWN dst          ; y >= 127
+  .local ok
+  lda my+1
+  bmi ok
+  bne dst
+  lda my
+  cmp #127
+  bcs dst
+ok:
+.endmacro
+
 .proc clip2d
   lda #6
   sta guard
@@ -2397,14 +2497,6 @@ top:
   lda ob
   sta oa
 outA:
-  lda oa
-  sta u0
-  ; lowest set bit
-  sec
-  sbc #1
-  eor u0
-  and u0
-  sta clipBit
   ; inside point starts at b
   lda bx
   sta ix
@@ -2414,74 +2506,71 @@ outA:
   sta iy
   lda by+1
   sta iy+1
-loop:
+  ; passes: the bit length of the larger of |a-i| on each axis
   lda ax
-  clc
-  adc ix
-  sta mx
+  sec
+  sbc ix
+  sta u0
   lda ax+1
-  adc ix+1
-  cmp #$80
-  ror a
-  ror mx
-  sta mx+1
-  lda ay
-  clc
-  adc iy
-  sta my
-  lda ay+1
-  adc iy+1
-  cmp #$80
-  ror a
-  ror my
-  sta my+1
-  ; finished when the midpoint equals an end on both axes
-  lda mx
-  cmp ix
-  bne notI
-  lda mx+1
-  cmp ix+1
-  bne notI
-  lda my
-  cmp iy
-  bne notI
-  lda my+1
-  cmp iy+1
-  beq settled
-notI:
-  lda mx
-  cmp ax
-  bne notA
-  lda mx+1
-  cmp ax+1
-  bne notA
-  lda my
-  cmp ay
-  bne notA
-  lda my+1
-  cmp ay+1
-  beq settled
-notA:
-  OUTCODE mx, my, u1
+  sbc ix+1
+  bpl :+
+  eor #$FF             ; |dx|, give or take one: only its size matters
+  sta u1
+  lda u0
+  eor #$FF
+  sta u0
   lda u1
-  and clipBit
-  beq inside
-  ldx #3
-: lda mx,x
-  sta ax,x
-  dex
-  bpl :-
-  jmp loop
-inside:
-  lda mx
-  sta ix
-  lda mx+1
-  sta ix+1
-  lda my
-  sta iy
-  lda my+1
-  sta iy+1
-  jmp loop
+: sta u1
+  lda ay
+  sec
+  sbc iy
+  sta t0
+  lda ay+1
+  sbc iy+1
+  bpl :+
+  eor #$FF
+  sta t1
+  lda t0
+  eor #$FF
+  sta t0
+  lda t1
+: ora u1               ; the bit length of (|dx| or |dy|) is the larger one's
+  sta u1
+  lda t0
+  ora u0
+  sta u0
+  ldx #1
+  lda u1
+  beq lowByte
+  ldx #9
+: lsr a
+  beq counted
+  inx
+  bne :-
+lowByte:
+  lda u0
+: lsr a
+  beq counted
+  inx
+  bne :-
+counted:
+  inx                  ; one more for the floor in each halving
+  stx guard2
+  ; dispatch on the lowest outside bit: 1 left, 2 right, 4 up, 8 down
+  lda oa
+  lsr a
+  bcs goLeft
+  lsr a
+  bcs goRight
+  lsr a
+  bcs goUp
+  jmp cDown
+goLeft:
+  jmp cLeft
+goRight:
+  jmp cRight
+goUp:
+  jmp cUp
 settled:
   lda ix
   sta ax
@@ -2493,6 +2582,11 @@ settled:
   sta ay+1
   jmp top
 .endproc
+
+CLIPLOOP cLeft, T_LEFT
+CLIPLOOP cRight, T_RIGHT
+CLIPLOOP cUp, T_UP
+CLIPLOOP cDown, T_DOWN
 
 ; Finds the point where a segment crosses the near plane. X = vertex in front,
 ; Y = vertex behind. Result in outX/outY.
@@ -2525,20 +2619,20 @@ settled:
   lda #9
   sta guard
 iter:
-  ldx #4
-: lda f3,x
+  ; unrolled: midpoint of f and b on each axis, then keep the half that
+  ; straddles the plane
+.repeat 3, k
+  lda f3+k*2
   clc
-  adc b3,x
-  sta px,x
-  lda f3+1,x
-  adc b3+1,x
+  adc b3+k*2
+  sta px+k*2
+  lda f3+k*2+1
+  adc b3+k*2+1
   cmp #$80
   ror a
-  ror px,x
-  sta px+1,x
-  dex
-  dex
-  bpl :-
+  ror px+k*2
+  sta px+k*2+1
+.endrepeat
   lda pz+1
   bmi back
   bne frontM
@@ -2546,26 +2640,26 @@ iter:
   cmp #NEAR
   bcc back
 frontM:
-  ldx #5
-: lda px,x
-  sta f3,x
-  dex
-  bpl :-
-  jmp cont
-back:
-  ldx #5
-: lda px,x
-  sta b3,x
-  dex
-  bpl :-
-cont:
+.repeat 6, k
+  lda px+k
+  sta f3+k
+.endrepeat
   dec guard
-  bne iter
-  ldx #5
-: lda f3,x
-  sta px,x
-  dex
-  bpl :-
+  beq done
+  jmp iter
+back:
+.repeat 6, k
+  lda px+k
+  sta b3+k
+.endrepeat
+  dec guard
+  beq done
+  jmp iter
+done:
+.repeat 6, k
+  lda f3+k
+  sta px+k
+.endrepeat
   jmp project
 .endproc
 

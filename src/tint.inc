@@ -8,6 +8,7 @@
 ECHO_MODEL = 16
 CONCORD_MODEL = 32
 CARRIER_MODEL = $0A
+PICKET_MODEL = $38      ; lancer shape (bit 3), tinted (bits 4-5)
 ATTR_COST  = 450       ; IRQ cycles kept back for write_attrs
 
 ; Frame start: forget last frame's squares while a tint is fading out.

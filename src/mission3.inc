@@ -2,6 +2,7 @@
 .pushseg
 .segment "CODE"
 WRECK_HP  = 20
+SIX_HP    = 12         ; Lantern Two: Six's drifting fighter
 WRECK_FRE = $10        ; freighter byte on a defend step: protect the wreck
 
 ; The Vigil in her usual place, ready to take you home.
@@ -32,6 +33,7 @@ vigil_home:
 ; After setup: in an escort the shuttle is what you protect; in a wreck
 ; mission the wreck stands in the Vigil's slot until it is time to land.
 mission_extras:
+  jsr line_colour      ; amber for the Corvane flashback
   ldx missionId
   lda tintTab,x
   sta tintColor
@@ -47,10 +49,38 @@ mission_extras:
   lda #80
   sta protR
   lda #SHUTTLE_HP
+  jsr easy_half
   sta shuttleHP
 : ldx missionId
   lda wreckTab,x
-  beq :++
+  bne haveWreck
+  rts
+haveWreck:
+  cmp #3
+  bne notSix
+  ; Lantern Two: Six's fighter, dark and drifting, in the Vigil's slot
+  lda #<SIXW_X
+  sta shipPosL+VIGIL
+  lda #>SIXW_X
+  sta shipPosH+VIGIL
+  lda #<SIXW_Y
+  sta shipPosL+16+VIGIL
+  lda #>SIXW_Y
+  sta shipPosH+16+VIGIL
+  lda #<SIXW_Z
+  sta shipPosL+32+VIGIL
+  lda #>SIXW_Z
+  sta shipPosH+32+VIGIL
+  lda #0               ; the Lantern fighter: the scout hull
+  sta shipModel+VIGIL
+  lda #1
+  sta alive+VIGIL
+  lda #170             ; tumbling slightly off true
+  sta hYaw+VIGIL
+  lda #220
+  sta hPitch+VIGIL
+  rts
+notSix:
   cmp #2
   bne :+
   ; the Array: a vast spire standing on end where the Vigil would be
@@ -87,7 +117,7 @@ mission_extras:
   sta hYaw+VIGIL
   lda #30
   sta hPitch+VIGIL
-: rts
+  rts
 
 ; Carry clear if the enemy bolt is within protR of ship protSlot on one axis.
 .macro PAXIS wOff
@@ -149,10 +179,19 @@ ok:
   lda #R_RENFAIL
   bne say
 wreck:
+  lda missionId
+  cmp #M_LANTERN2
+  beq sixHit
   lda #R_WRECKHIT
   cpx #5
   bne say
   lda #R_WRECKLOW
+  bne say
+sixHit:
+  lda #R_L_SIXHIT      ; Lantern Two: it is Six's fighter they are hitting
+  cpx #5
+  bne say
+  lda #R_L_SIXLOW
 say:
   ldx #0
   stx radioT

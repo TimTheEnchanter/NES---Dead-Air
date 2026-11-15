@@ -15,8 +15,8 @@ dy:      .res 1
 err:     .res 1
 cnt:     .res 1
 mask:    .res 1
-segS:    .res 1
-segL:    .res 1
+mrp:     .res 2         ; x-major lines: points into maskQ (see gen_tables.py)
+prev = mask             ; x-major lines: bits of this row already drawn
 saveX:   .res 1
 vecM:    .res 2
 x0:      .res 1
@@ -156,6 +156,18 @@ statHunter: .res 8
 
 ; ---- all other RAM: the linker places these, so nothing can overlap
 .segment "BSS"
+palRA:   .res 2          ; line colours for the flip: palA/palB, per mission
+palRB:   .res 2
+guard2:  .res 1          ; clip2d: halvings left
+chapBase: .res 2
+chapSel:  .res 1
+.ifdef DEBUG
+dbgBad:  .res 1          ; DEBUG: list entries outside the nametables
+dbgNest: .res 1          ; DEBUG: NMI arrived inside the IRQ
+dbgIn:   .res 1
+.endif
+gateOpen:.res 1         ; this frame has claimed the tile buffer
+saveY:   .res 1
 alive: .res 8
 hp: .res 8
 respawn: .res 8
@@ -232,6 +244,7 @@ marginH: .res 1
 shipModel: .res 4
 hPassive: .res 4
 radioReq: .res 1
+radioBusy:.res 1        ; this interrupt wrote the radio row: less upload time
 radioT: .res 1
 radioPage: .res 1
 radioOff: .res 1
@@ -260,6 +273,9 @@ musReq: .res 1
 musCur: .res 1
 retBank: .res 1
 portHigh: .res 1
+difficulty: .res 1
+easyHalf: .res 1
+pingT: .res 1
 retPtr: .res 2
 musStart: .res 2
 musWait: .res 1
@@ -323,5 +339,8 @@ xnh: .res 1
 wramTables: .res $1200
 .assert wramTables = PAT, error, "tile tables must start at PAT"
 .segment "SAVE"
-saveArea: .res 8         ; D A ver resume flags sum flags2 flags2^$A5
+saveArea: .res 10        ; D A ver resume flags sum flags2 flags2^$A5
+saveDone: .res 2         ; story finished at least once: 1, then 1^$C3
+saveSnap: .res 14        ; flags and flags2 at the start of chapters 2-8
+saveSnapSum: .res 1      ; sum of saveSnap, eor $3C
 

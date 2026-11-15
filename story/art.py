@@ -135,8 +135,21 @@ def teller():
         for x in range(W):
             if g[y][x]: g[y][x]=1 if g[y][x]==3 else 0
     return g
-PORTRAITS=[('hale',hale('smile'),'smile'),('hale',hale('serious'),'serious'),('voss',voss('calm'),'calm'),('voss',voss('hard'),'hard'),('mara',mara('calm'),'calm'),('mara',mara('hard'),'hard'),('ren',ren(),'calm'),('log',blank(),'none'),('teller',teller(),'ghost'),('mara',mara('soft'),'soft'),('ren',ren('strain'),'strain')]
-PAL={'hale':(0x07,0x27,0x37),'voss':(0x0C,0x10,0x37),'mara':(0x06,0x16,0x36),'ren':(0x08,0x17,0x27),'log':(0x0F,0x0F,0x0F),'teller':(0x0C,0x1C,0x2C)}  # dark, mid, light as NES colours
+def static():
+    # Lantern One: no face, only interference. Four noise tiles, scattered,
+    # so it costs four tiles of the portrait budget
+    import random
+    rnd=random.Random(6)
+    tiles=[[[rnd.choice((0,0,0,1,1,2,3)) for x in range(8)] for y in range(8)] for _ in range(4)]
+    g=blank()
+    for ty in range(6):
+        for tx in range(6):
+            t=tiles[rnd.randrange(4)]
+            for y in range(8):
+                for x in range(8): g[ty*8+y][tx*8+x]=t[y][x]
+    return g
+PORTRAITS=[('hale',hale('smile'),'smile'),('hale',hale('serious'),'serious'),('voss',voss('calm'),'calm'),('voss',voss('hard'),'hard'),('mara',mara('calm'),'calm'),('mara',mara('hard'),'hard'),('ren',ren(),'calm'),('log',blank(),'none'),('teller',teller(),'ghost'),('mara',mara('soft'),'soft'),('ren',ren('strain'),'strain'),('tellerl',teller(),'alive'),('one',static(),'static')]
+PAL={'hale':(0x07,0x27,0x37),'voss':(0x0C,0x10,0x37),'mara':(0x06,0x16,0x36),'ren':(0x08,0x17,0x27),'log':(0x0F,0x0F,0x0F),'teller':(0x0C,0x1C,0x2C),'tellerl':(0x07,0x17,0x27),'one':(0x00,0x10,0x20)}  # tellerl: Teller alive, in the flashback  # dark, mid, light as NES colours
 NESRGB={0x0F:(0,0,0),0x07:(90,44,0),0x27:(232,144,80),0x37:(255,214,170),0x0C:(0,60,90),0x10:(170,170,170),0x06:(120,20,10),0x16:(200,60,30),0x36:(255,190,170),0x01:(10,30,110),0x17:(170,90,20)}
 if __name__=='__main__':
     from PIL import Image

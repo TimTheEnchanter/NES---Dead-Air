@@ -118,7 +118,8 @@ explo=noise([(9+min(i//6,6),max(1,15-i//3),0) for i in range(42)])
 crash=noise([(12,15,1),(12,14,1),(13,13,0),(13,12,0)]+[(14,max(1,11-i//2),0) for i in range(20)])
 blip=pulse([(880,3),(880,1)],2)
 start=pulse([(f,9) for f in (392,392,392,392,523,523,523,523,659,659,659,659,784,784,784,784)]+[(784,max(1,8-i)) for i in range(8)],1)
-SFX=[('Laser',laser,0,1),('Enemy',enemy,1,1),('Hit',hit,2,1),('Explo',explo,2,3),('Crash',crash,2,2),('Start',start,1,2),('Blip',blip,1,0)]
+ping=pulse([(1760,6),(1760,5),(1760,3),(1760,2),(1760,1)],1)
+SFX=[('Laser',laser,0,1),('Enemy',enemy,1,1),('Hit',hit,2,1),('Explo',explo,2,3),('Crash',crash,2,2),('Start',start,1,2),('Blip',blip,1,0),('Ping',ping,1,1)]
 for n,d,c,pr in SFX: o.write(f'sfx{n}:\n  .byte '+','.join(str(v) for v in d)+'\n')
 o.write('sfxLo: .byte 0,'+','.join(f'<sfx{n}' for n,*_ in SFX)+'\n')
 o.write('sfxHi: .byte 0,'+','.join(f'>sfx{n}' for n,*_ in SFX)+'\n')
@@ -210,7 +211,7 @@ for c in RC: o.write('  .byte '+','.join(str(v) for v in FONTROM[ord(c)*16:ord(c
 RL=[('WING','HALE: ON YOUR WING, SIX.'),('TALLY','HALE: TWO SCOUTS AHEAD.'),('GOOD','HALE: GOOD HIT, SIX!'),('ONE','HALE: SCOUT DOWN!'),('BOLT','HALE: BREAK, SIX! BREAK!'),('HALE_HIT','HALE: I TAGGED ONE!'),('LOW','HALE: SHIELDS LOW, SIX!'),('STATIC',"... ANTERN ... IX ..."),
  ('NAV','HALE: NAV ONE. QUIET.'),('CLEAR','HALE: SCOUTS DOWN. NICE.'),('HOME','HALE: TAKE US HOME, SIX.'),('LAND','VIGIL: CLEAR TO LAND.'),
  ('CONVOY','HALE: CONVOY AHEAD!'),('CARGO','HALE: CARGO SECURED!'),('VOICE',"... SIX ... CAN YOU HEAR"),('EMPTY','HALE: NOTHING OUT HERE.'),('RUN',"HALE: THEY'RE RUNNING!"),('JUMPED','HALE: CONVOY JUMPED!'),('ONEAWAY','HALE: ONE GOT AWAY.'),
- ('BUOY',"HALE: THERE'S THE BUOY."),('BUOYDEAD',"HALE: BUOY'S DEAD."),('TBEHIND','TELLER: SIX, BEHIND YOU!'),('TNEXT','TELLER: NEXT POINT. TWO.'),('HAULER','HALE: ONE HAULER DOWN!'),
+ ('BUOY',"HALE: THERE'S THE BUOY."),('BUOYDEAD',"HALE: BUOY'S DEAD."),('TBEHIND','TELLER: SIX, BEHIND YOU!'),('TNEXT','TELLER: TWO, OUT.'),('HAULER','HALE: ONE HAULER DOWN!'),
  ('LANCERDN','HALE: LANCER DOWN!'),
  # Mara on your wing
  ('M_WING','MARA: ON YOUR WING, SIX.'),('M_GOOD','MARA: GOOD HIT.'),('M_ONE','MARA: SCOUT DOWN.'),('M_BOLT','MARA: BREAK, SIX!'),
@@ -242,7 +243,12 @@ RL=[('WING','HALE: ON YOUR WING, SIX.'),('TALLY','HALE: TWO SCOUTS AHEAD.'),('GO
  ('CARRIER','HALE: SERRATH CARRIER!'),('M_CARRIER','MARA: SERRATH CARRIER!'),
  ('ECHOES',"HALE: THEY'RE LANTERNS!"),('M_ECHOES',"MARA: THEY'RE LANTERNS!"),
  ('T_BACK','TELLER: YOU CAME BACK.'),('T_ALWAYS','TELLER: YOU ALWAYS DO.'),
- ('V_ECHOSTOP','REN: IT STOPPED, SIX.'),('V_THATSHER',"REN: SIX... THAT'S HER."),('V_HOME','VIGIL: COME HOME, SIX.')]
+ ('V_ECHOSTOP','REN: IT STOPPED, SIX.'),('V_THATSHER',"REN: SIX... THAT'S HER."),('V_HOME','VIGIL: COME HOME, SIX.'),
+ # Lantern Two: Corvane, the night it happened. You fly as Teller
+ ('L_SCREEN',"MARA: SCREEN'S SET, JUN."),('L_SHOW','MARA: SHOW OFF.'),('L_CARRIER','MARA: CARRIER! BIG ONE!'),
+ ('L_SIXDOWN','TELLER: SIX IS DOWN!'),('L_RETREAT','VOSS: ALL SHIPS, RETREAT'),('L_ORDERS',"MARA: JUN! THAT'S ORDERS"),
+ ('L_STAY','TELLER: NOT WITHOUT SIX.'),('L_GOTYOU','TELLER: GOT YOU, SIX.'),('L_BREAK','MARA: JUN, BREAK RIGHT!'),
+ ('L_SIXHIT',"TELLER: THEY'RE ON SIX!"),('L_SIXLOW',"MARA: SIX WON'T LAST!")]
 # Radio text lives in its own bank (6). say_radio maps it for a moment, copies
 # the one line it needs into RAM, and maps the flight bank back.
 o.write('.segment "RADIO"\n')
@@ -269,6 +275,7 @@ def sneak(x,y,z,px,pz,arrive=0,clear=0):
     # a picket at (x+px, y, z+pz); offsets stored /8 in the count and hp bytes
     return step(SNEAK,x,y,z,arrive,clear,count=(px//8)&255,hp=(pz//8)&255,wait=1)
 WRECK=(-700,60,600)
+SIXW=(500,80,700)    # Lantern Two: where Six's fighter drifts
 HOLD=0x80   # freighter bits: the targets stay put, standing on end
 import os
 LIMIT_M2=int(os.environ.get('LIMIT_M2','11'))
@@ -325,13 +332,21 @@ MISSIONS=[
   step(FIGHT,-600,100,800,RN['CARRIER'],RN['CARRIERDN'],count=2,hp=18,wait=CARRIER_WAIT),
   step(FIGHT,300,150,800,RN['ECHOES'],0,count=2,hp=4,fre=CONCORD,wait=SPARED_ONE),
   step(EMPTY,-200,0,550,RN['T_BACK'],0,wait=200),
-  step(FINISH,-200,0,700,RN['T_ALWAYS'],0,wait=150)]]
-MODES=[0,0,0,0,2,1,0,0,0,3,0]
-o.write('wreckTab: .byte 0,0,0,0,0,0,0,1,0,0,2\n')
+  step(FINISH,-200,0,700,RN['T_ALWAYS'],0,wait=150)],
+ # Lantern Two (secret): Teller's last flight. Six's fighter drifts at SIXW;
+ # after the retreat order you hold it alone. A finish step with hp=1 ends
+ # the mission where you are, without flying to its point.
+ [step(FIGHT,-600,60,700,RN['L_SCREEN'],RN['L_SHOW'],count=2,hp=4),
+  step(EMPTY,200,40,600,RN['L_CARRIER'],RN['L_SIXDOWN'],wait=150),
+  step(EMPTY,*SIXW,RN['L_RETREAT'],RN['L_ORDERS'],wait=120),
+  step(DEFEND,*SIXW,RN['L_STAY'],RN['L_BREAK'],count=2,hp=4,wait=RN['L_GOTYOU'],fre=PROTECT,limit=14),
+  step(FINISH,*SIXW,0,0,hp=1,wait=60)]]
+MODES=[0,0,0,0,2,1,0,0,0,3,0,3]
+o.write('wreckTab: .byte 0,0,0,0,0,0,0,1,0,0,2,3\n')   # 3: Six's fighter, adrift
 o.write(f'ARRAY_X={ARRAY[0]}\nARRAY_Y={ARRAY[1]}\nARRAY_Z={ARRAY[2]}\nCONCORD_TINT=$21\n')
 # tint colour per mission: cyan for the echo drone, light blue for Concord pilots
-o.write('tintTab: .byte $2C,$2C,$2C,$2C,$2C,$2C,$2C,$2C,$21,$2C,$2C\n')
-o.write(f'WRECK_X={WRECK[0]}\nWRECK_Y={WRECK[1]}\nWRECK_Z={WRECK[2]}\n')   # 0 Hale on your wing, 1 Mara, 2 Ren's shuttle and no wingman
+o.write('tintTab: .byte $2C,$2C,$2C,$2C,$2C,$2C,$2C,$2C,$21,$16,$2C,$2C\n')   # 7B: pickets in red
+o.write(f'WRECK_X={WRECK[0]}\nWRECK_Y={WRECK[1]}\nWRECK_Z={WRECK[2]}\nSIXW_X={SIXW[0]}\nSIXW_Y={SIXW[1]}\nSIXW_Z={SIXW[2]}\nM_LANTERN2={len(MISSIONS)}\n')   # 0 Hale on your wing, 1 Mara, 2 Ren's shuttle and no wingman
 o.write('missionModeTab: .byte '+','.join(map(str,MODES))+'\n')
 # per-mode versions of the wingman's lines; 0 = nobody says it
 MARA={'E_DIS':'M_E_DIS','CARRIERDN':'M_CARRIERDN','CORVANE':'M_CORVANE','CARRIER':'M_CARRIER','ECHOES':'M_ECHOES','C_DIS':'M_C_DIS','ASH':'M_ASH','ECHOSTOP':'M_ECHOSTOP','HIGHLEFT':'M_HIGHLEFT','THATSHER':'M_THATSHER','ECHODN':'M_ECHODN','ECHOCONTACT':'M_ECHOCONTACT','THANKS':None,'HURRY':None,'HALEHIT':None,'ONTAIL':None,'WING':'M_WING','GOOD':'M_GOOD','ONE':'M_ONE','BOLT':'M_BOLT','HALE_HIT':'M_HIT','LOW':'M_LOW','HOME':'M_HOME','LANCERDN':'M_LANCERDN','HAULER':None,'TALLY':None,'CLEAR':None}
@@ -362,6 +377,14 @@ N=[unit(f) for f in FA]
 tab('nxu',[(round(127*n[0])&255)^0x80 for n in N]); tab('nyu',[(round(127*n[1])&255)^0x80 for n in N]); tab('nzu',[(round(127*n[2])&255)^0x80 for n in N])
 tab('fd',[round(dot(n,VA[f[0]])) for n,f in zip(N,FA)])
 ks=list(E); ks2=list(E2); ks3=list(E3); ks4=list(E4); tab('ea',[k[0] for k in ks]+[k[0]+10 for k in ks2]+[k[0]+15 for k in ks3]+[k[0]+23 for k in ks4]); tab('eb',[k[1] for k in ks]+[k[1]+10 for k in ks2]+[k[1]+15 for k in ks3]+[k[1]+23 for k in ks4]); tab('emask',[E[k] for k in ks]+[E2[k] for k in ks2]+[E3[k] for k in ks3]+[E4[k] for k in ks4])
+# faces touching each vertex (through its edges): a vertex whose faces are all
+# hidden is never drawn, so the transform skips it
+EA=[k[0] for k in ks]+[k[0]+10 for k in ks2]+[k[0]+15 for k in ks3]+[k[0]+23 for k in ks4]
+EB=[k[1] for k in ks]+[k[1]+10 for k in ks2]+[k[1]+15 for k in ks3]+[k[1]+23 for k in ks4]
+EM=[E[k] for k in ks]+[E2[k] for k in ks2]+[E3[k] for k in ks3]+[E4[k] for k in ks4]
+vm=[0]*len(VA)
+for a_,b_,m_ in zip(EA,EB,EM): vm[a_]|=m_; vm[b_]|=m_
+tab('vmask',vm)
 print('radius',round(R,1),'verts',V)
 
 # ---- line-drawing blocks: one code block per pixel row of a tile ----
@@ -369,60 +392,103 @@ L=[]
 def e(s): L.append(s)
 def plot(r):
     e(f"  lda PAT+{r}*256,y"); e("  ora mask"); e(f"  sta PAT+{r}*256,y")
+# Tile lookups are inlined. Y-major blocks keep the tile in Y and the count
+# in X; x-major blocks keep the tile in X and the count in Y, so a span's
+# mask is one (mrp),y read: mrp points into maskQ so that (mrp),y is the
+# mask from bit 0 to the current pixel, and prev holds the bits already done.
+lab=[0]
+def uniq(p):
+    lab[0]+=1; return f"{p}{lab[0]}"
+def step_y(move):
+    # Y = new tile (X kept)
+    move()
+    al=uniq('ya'); bk=uniq('yb')
+    e("  ldy #0"); e("  lda (mptr),y"); e(f"  bne {bk}"); e("  jsr lookAlloc"); e(f"  jmp {bk}+1")
+    e(f"{bk}:"); e("  tay")
+def step_x(move):
+    # X = new tile (Y kept)
+    move()
+    bk=uniq('xb')
+    e("  ldx #0"); e("  lda (mptr,x)"); e(f"  bne {bk}"); e("  jsr allocX"); e(f"  jmp {bk}+1")
+    e(f"{bk}:"); e("  tax")
+def mv_right(): e("  inc mptr")
+def mv_left(): e("  dec mptr")
+def mv_down():
+    k=uniq('md'); e("  lda mptr"); e("  clc"); e("  adc #32"); e("  sta mptr"); e(f"  bcc {k}"); e("  inc mptr+1"); e(f"{k}:")
+def mv_up():
+    k=uniq('mu'); e("  lda mptr"); e("  sec"); e("  sbc #32"); e("  sta mptr"); e(f"  bcs {k}"); e("  dec mptr+1"); e(f"{k}:")
+def mv_rd(): mv_right(); mv_down()
+def mv_ru(): mv_right(); mv_up()
 for up in (0,1):
     n='U' if up else 'D'
     for r in range(8):
         nr=(r-1)&7 if up else (r+1)&7
         wrap=(r==0) if up else (r==7)
-        stepT='tileUp' if up else 'tileDown'
+        vert=mv_up if up else mv_down
+        diag=mv_ru if up else mv_rd
         e(f"X{n}{r}:")
         e("  lda err"); e("  sec")
-        e(f"X{n}{r}_in:"); e("  dex"); e(f"  beq X{n}{r}_seg")
+        e(f"X{n}{r}_in:"); e("  dey"); e(f"  beq X{n}{r}_seg")
         e("  sbc dy"); e(f"  bcs X{n}{r}_in")
+        # the line moves to the next pixel row: draw this row's span
         e("  adc dx"); e("  sta err")
-        e("  stx u0"); e("  lda segL"); e("  sec"); e("  sbc u0"); e("  tax")
-        e("  lda maskR,x"); e("  stx u1"); e("  ldx segS"); e("  and maskL,x")
-        e(f"  ora PAT+{r}*256,y"); e(f"  sta PAT+{r}*256,y")
-        e("  ldx u1"); e("  inx"); e("  stx segS"); e("  ldx u0")
-        if wrap: e(f"  jsr {stepT}")
+        e("  lda (mrp),y"); e("  pha"); e("  eor prev")
+        e(f"  ora PAT+{r}*256,x"); e(f"  sta PAT+{r}*256,x")
+        e("  pla"); e("  sta prev")
+        if wrap: step_x(vert)
         e(f"  jmp X{n}{nr}")
         e(f"X{n}{r}_seg:")
         e("  sbc dy"); e("  sta err")
-        e("  ldx segL"); e("  lda maskR,x"); e("  ldx segS"); e("  and maskL,x")
-        e(f"  ora PAT+{r}*256,y"); e(f"  sta PAT+{r}*256,y")
+        e("  lda (mrp),y"); e("  eor prev")
+        e(f"  ora PAT+{r}*256,x"); e(f"  sta PAT+{r}*256,x")
         e("  lda cnt"); e(f"  bne X{n}{r}_more"); e("  rts")
         e(f"X{n}{r}_more:")
-        e("  lda #0"); e("  sta segS")
         e(f"  bcs X{n}{r}_same")
         e("  lda err"); e("  adc dx"); e("  sta err")
-        if wrap:
-            e("  inc mptr"); e(f"  jsr {stepT}")
-        else:
-            e("  jsr tileRight")
-        e("  jsr segInit"); e(f"  jmp X{n}{nr}")
+        step_x(diag if wrap else mv_right)
+        e("  jsr segNext"); e(f"  jmp X{n}{nr}")
         e(f"X{n}{r}_same:")
-        e("  jsr tileRight"); e("  jsr segInit"); e(f"  jmp X{n}{r}")
+        step_x(mv_right)
+        e("  jsr segNext"); e(f"  jmp X{n}{r}")
+# y-major: carry is set on entry to every block, so the error step needs no sec
 for rt in (0,1):
     n='R' if rt else 'L'
     for r in range(8):
+        nxt=f"Y{n}{(r+1)&7}"
         e(f"Y{n}{r}:")
         plot(r)
-        e("  dex"); e(f"  beq Y{n}_done{r}")
-        e("  lda err"); e("  sec"); e("  sbc dx"); e("  sta err")
-        e(f"  bcs Y{n}{r}_next")
+        e("  dex"); e(f"  beq Y{n}{r}_done")
+        e("  lda err"); e("  sbc dx"); e("  sta err")
+        if r<7:
+            e(f"  bcs {nxt}")
+        else:
+            e(f"  bcs Y{n}7_down")
         e("  adc dy"); e("  sta err")
         if rt:
-            e("  lsr mask"); e(f"  bcc Y{n}{r}_next"); e("  ror mask"); e("  jsr tileRight")
+            e("  lsr mask"); e(f"  bcs Y{n}{r}_wrap")
         else:
-            e("  asl mask"); e(f"  bcc Y{n}{r}_next"); e("  rol mask"); e("  jsr tileLeft")
-        e(f"Y{n}{r}_next:")
-        if r==7:
-            e("  jsr tileDown"); e(f"  jmp Y{n}0")
+            e("  asl mask"); e(f"  bcs Y{n}{r}_wrap")
+        if r<7:
+            e("  sec"); e(f"  jmp {nxt}")
+            e(f"Y{n}{r}_wrap:")
+            e("  ror mask" if rt else "  rol mask")
+            step_y(mv_right if rt else mv_left)
+            e("  sec"); e(f"  jmp {nxt}")
         else:
-            e(f"  jmp Y{n}{r+1}")
-        e(f"Y{n}_done{r}:"); e("  rts")
+            e(f"  jmp Y{n}7_down")
+            e(f"Y{n}{r}_wrap:")
+            e("  ror mask" if rt else "  rol mask")
+            # diagonal into the tile below: the tile beside it gets no pixel
+            (mv_right if rt else mv_left)()
+            e(f"Y{n}7_down:")
+            step_y(mv_down)
+            e("  sec"); e(f"  jmp Y{n}0")
+        e(f"Y{n}{r}_done:"); e("  rts")
 for t,pre in (('xdTab','XD'),('xuTab','XU'),('yrTab','YR'),('ylTab','YL')):
     e(f"{t}: .word "+','.join(f"{pre}{r}" for r in range(8)))
 e("maskL: .byte "+','.join(str(0xFF>>i) for i in range(8)))
 e("maskR: .byte "+','.join(str((0xFF00>>(i+1))&255) for i in range(8)))
+# maskQ[j] = maskR[7-j]; the x-major blocks index it through mrp
+e("maskQ: .byte "+','.join(str((0xFF00>>(7-j+1))&255) for j in range(8)))
+e(".assert <maskQ <= 248, error, \"maskQ must not cross a page\"")
 open('lines.inc','w').write('\n'.join(L)+'\n')

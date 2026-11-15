@@ -548,10 +548,15 @@ no:
 reload_len:
   lda aiStep
   cmp #1
-  beq :+
+  beq arenaReload
+  lda difficulty
+  bne easyReload
   lda #70              ; roughly eight seconds per scout at mission frame rates
   rts
-:
+easyReload:
+  lda #110             ; Easy: they fire less often
+  rts
+arenaReload:
   lda #H_RELOAD
   rts
 

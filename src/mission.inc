@@ -650,7 +650,12 @@ noCall:
   lda #1
   jmp end_mission
 notLand:
-  jsr near_nav
+  cmp #S_FINISH        ; a finish step with hp set ends where you are
+  bne :+
+  ldy #SP_HP
+  lda (spadP),y
+  bne :++
+: jsr near_nav
   bcs :+
   rts
 :
@@ -698,7 +703,9 @@ notLand:
   sta mLimit
   ldy #SP_LIMIT
   lda (spadP),y
-  sta mLimit+1
+  beq :+
+  jsr easy_more        ; Easy: convoys and defences give you longer
+: sta mLimit+1
   lsr a
   sta mHalf
   lda #0

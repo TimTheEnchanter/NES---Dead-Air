@@ -251,10 +251,12 @@ sfxStart:
   .byte 121,28,1,121,28,1,121,28,1,121,28,1,121,213,0,121,213,0,121,213,0,121,213,0,121,169,0,121,169,0,121,169,0,121,169,0,121,142,0,121,142,0,121,142,0,121,142,0,120,142,0,119,142,0,118,142,0,117,142,0,116,142,0,115,142,0,114,142,0,113,142,0,0
 sfxBlip:
   .byte 179,126,0,177,126,0,0
-sfxLo: .byte 0,<sfxLaser,<sfxEnemy,<sfxHit,<sfxExplo,<sfxCrash,<sfxStart,<sfxBlip
-sfxHi: .byte 0,>sfxLaser,>sfxEnemy,>sfxHit,>sfxExplo,>sfxCrash,>sfxStart,>sfxBlip
-sfxPrio: .byte 0,1,1,1,3,2,2,0
-sfxChan: .byte 0,0,1,2,2,2,1,1
+sfxPing:
+  .byte 118,63,0,117,63,0,115,63,0,114,63,0,113,63,0,0
+sfxLo: .byte 0,<sfxLaser,<sfxEnemy,<sfxHit,<sfxExplo,<sfxCrash,<sfxStart,<sfxBlip,<sfxPing
+sfxHi: .byte 0,>sfxLaser,>sfxEnemy,>sfxHit,>sfxExplo,>sfxCrash,>sfxStart,>sfxBlip,>sfxPing
+sfxPrio: .byte 0,1,1,1,3,2,2,0,1
+sfxChan: .byte 0,0,1,2,2,2,1,1,1
 SFX_LASER=1
 SFX_ENEMY=2
 SFX_HIT=3
@@ -262,6 +264,7 @@ SFX_EXPLO=4
 SFX_CRASH=5
 SFX_START=6
 SFX_BLIP=7
+SFX_PING=8
 engCtl: .byte $30,50,50,50,50,50,51,51,51,51,51,51,52,52,52,52,52,52,52,52,52
 engPer: .byte 0,14,14,14,14,13,13,13,13,13,12,12,12,12,12,11,11,11,11,11,10
 textTitle:
@@ -433,7 +436,7 @@ radioL21: .byte 0,0,0,230,223,234,227,254,0,224,243,237,247,253,241,0,226,227,22
 R_BUOYDEAD=21
 radioL22: .byte 242,227,234,234,227,240,254,0,241,231,246,250,0,224,227,230,231,236,226,0,247,237,243,251
 R_TBEHIND=22
-radioL23: .byte 242,227,234,234,227,240,254,0,236,227,246,242,0,238,237,231,236,242,249,0,242,245,237,249
+radioL23: .byte 0,0,0,242,227,234,234,227,240,254,0,242,245,237,250,0,237,243,242,249,0,0,0,0
 R_TNEXT=23
 radioL24: .byte 0,230,223,234,227,254,0,237,236,227,0,230,223,243,234,227,240,0,226,237,245,236,251,0
 R_HAULER=24
@@ -587,19 +590,45 @@ radioL98: .byte 240,227,236,254,0,241,231,246,249,249,249,0,242,230,223,242,253,
 R_V_THATSHER=98
 radioL99: .byte 0,244,231,229,231,234,254,0,225,237,235,227,0,230,237,235,227,250,0,241,231,246,249,0
 R_V_HOME=99
-radioLo: .byte 0,<radioL1,<radioL2,<radioL3,<radioL4,<radioL5,<radioL6,<radioL7,<radioL8,<radioL9,<radioL10,<radioL11,<radioL12,<radioL13,<radioL14,<radioL15,<radioL16,<radioL17,<radioL18,<radioL19,<radioL20,<radioL21,<radioL22,<radioL23,<radioL24,<radioL25,<radioL26,<radioL27,<radioL28,<radioL29,<radioL30,<radioL31,<radioL32,<radioL33,<radioL34,<radioL35,<radioL36,<radioL37,<radioL38,<radioL39,<radioL40,<radioL41,<radioL42,<radioL43,<radioL44,<radioL45,<radioL46,<radioL47,<radioL48,<radioL49,<radioL50,<radioL51,<radioL52,<radioL53,<radioL54,<radioL55,<radioL56,<radioL57,<radioL58,<radioL59,<radioL60,<radioL61,<radioL62,<radioL63,<radioL64,<radioL65,<radioL66,<radioL67,<radioL68,<radioL69,<radioL70,<radioL71,<radioL72,<radioL73,<radioL74,<radioL75,<radioL76,<radioL77,<radioL78,<radioL79,<radioL80,<radioL81,<radioL82,<radioL83,<radioL84,<radioL85,<radioL86,<radioL87,<radioL88,<radioL89,<radioL90,<radioL91,<radioL92,<radioL93,<radioL94,<radioL95,<radioL96,<radioL97,<radioL98,<radioL99
-radioHi: .byte 0,>radioL1,>radioL2,>radioL3,>radioL4,>radioL5,>radioL6,>radioL7,>radioL8,>radioL9,>radioL10,>radioL11,>radioL12,>radioL13,>radioL14,>radioL15,>radioL16,>radioL17,>radioL18,>radioL19,>radioL20,>radioL21,>radioL22,>radioL23,>radioL24,>radioL25,>radioL26,>radioL27,>radioL28,>radioL29,>radioL30,>radioL31,>radioL32,>radioL33,>radioL34,>radioL35,>radioL36,>radioL37,>radioL38,>radioL39,>radioL40,>radioL41,>radioL42,>radioL43,>radioL44,>radioL45,>radioL46,>radioL47,>radioL48,>radioL49,>radioL50,>radioL51,>radioL52,>radioL53,>radioL54,>radioL55,>radioL56,>radioL57,>radioL58,>radioL59,>radioL60,>radioL61,>radioL62,>radioL63,>radioL64,>radioL65,>radioL66,>radioL67,>radioL68,>radioL69,>radioL70,>radioL71,>radioL72,>radioL73,>radioL74,>radioL75,>radioL76,>radioL77,>radioL78,>radioL79,>radioL80,>radioL81,>radioL82,>radioL83,>radioL84,>radioL85,>radioL86,>radioL87,>radioL88,>radioL89,>radioL90,>radioL91,>radioL92,>radioL93,>radioL94,>radioL95,>radioL96,>radioL97,>radioL98,>radioL99
+radioL100: .byte 235,223,240,223,254,0,241,225,240,227,227,236,253,241,0,241,227,242,250,0,232,243,236,249
+R_L_SCREEN=100
+radioL101: .byte 0,0,0,0,235,223,240,223,254,0,241,230,237,245,0,237,228,228,249,0,0,0,0,0
+R_L_SHOW=101
+radioL102: .byte 235,223,240,223,254,0,225,223,240,240,231,227,240,251,0,224,231,229,0,237,236,227,251,0
+R_L_CARRIER=102
+radioL103: .byte 0,0,242,227,234,234,227,240,254,0,241,231,246,0,231,241,0,226,237,245,236,251,0,0
+R_L_SIXDOWN=103
+radioL104: .byte 244,237,241,241,254,0,223,234,234,0,241,230,231,238,241,250,0,240,227,242,240,227,223,242
+R_L_RETREAT=104
+radioL105: .byte 235,223,240,223,254,0,232,243,236,251,0,242,230,223,242,253,241,0,237,240,226,227,240,241
+R_L_ORDERS=105
+radioL106: .byte 242,227,234,234,227,240,254,0,236,237,242,0,245,231,242,230,237,243,242,0,241,231,246,249
+R_L_STAY=106
+radioL107: .byte 0,242,227,234,234,227,240,254,0,229,237,242,0,247,237,243,250,0,241,231,246,249,0,0
+R_L_GOTYOU=107
+radioL108: .byte 235,223,240,223,254,0,232,243,236,250,0,224,240,227,223,233,0,240,231,229,230,242,251,0
+R_L_BREAK=108
+radioL109: .byte 242,227,234,234,227,240,254,0,242,230,227,247,253,240,227,0,237,236,0,241,231,246,251,0
+R_L_SIXHIT=109
+radioL110: .byte 0,235,223,240,223,254,0,241,231,246,0,245,237,236,253,242,0,234,223,241,242,251,0,0
+R_L_SIXLOW=110
+radioLo: .byte 0,<radioL1,<radioL2,<radioL3,<radioL4,<radioL5,<radioL6,<radioL7,<radioL8,<radioL9,<radioL10,<radioL11,<radioL12,<radioL13,<radioL14,<radioL15,<radioL16,<radioL17,<radioL18,<radioL19,<radioL20,<radioL21,<radioL22,<radioL23,<radioL24,<radioL25,<radioL26,<radioL27,<radioL28,<radioL29,<radioL30,<radioL31,<radioL32,<radioL33,<radioL34,<radioL35,<radioL36,<radioL37,<radioL38,<radioL39,<radioL40,<radioL41,<radioL42,<radioL43,<radioL44,<radioL45,<radioL46,<radioL47,<radioL48,<radioL49,<radioL50,<radioL51,<radioL52,<radioL53,<radioL54,<radioL55,<radioL56,<radioL57,<radioL58,<radioL59,<radioL60,<radioL61,<radioL62,<radioL63,<radioL64,<radioL65,<radioL66,<radioL67,<radioL68,<radioL69,<radioL70,<radioL71,<radioL72,<radioL73,<radioL74,<radioL75,<radioL76,<radioL77,<radioL78,<radioL79,<radioL80,<radioL81,<radioL82,<radioL83,<radioL84,<radioL85,<radioL86,<radioL87,<radioL88,<radioL89,<radioL90,<radioL91,<radioL92,<radioL93,<radioL94,<radioL95,<radioL96,<radioL97,<radioL98,<radioL99,<radioL100,<radioL101,<radioL102,<radioL103,<radioL104,<radioL105,<radioL106,<radioL107,<radioL108,<radioL109,<radioL110
+radioHi: .byte 0,>radioL1,>radioL2,>radioL3,>radioL4,>radioL5,>radioL6,>radioL7,>radioL8,>radioL9,>radioL10,>radioL11,>radioL12,>radioL13,>radioL14,>radioL15,>radioL16,>radioL17,>radioL18,>radioL19,>radioL20,>radioL21,>radioL22,>radioL23,>radioL24,>radioL25,>radioL26,>radioL27,>radioL28,>radioL29,>radioL30,>radioL31,>radioL32,>radioL33,>radioL34,>radioL35,>radioL36,>radioL37,>radioL38,>radioL39,>radioL40,>radioL41,>radioL42,>radioL43,>radioL44,>radioL45,>radioL46,>radioL47,>radioL48,>radioL49,>radioL50,>radioL51,>radioL52,>radioL53,>radioL54,>radioL55,>radioL56,>radioL57,>radioL58,>radioL59,>radioL60,>radioL61,>radioL62,>radioL63,>radioL64,>radioL65,>radioL66,>radioL67,>radioL68,>radioL69,>radioL70,>radioL71,>radioL72,>radioL73,>radioL74,>radioL75,>radioL76,>radioL77,>radioL78,>radioL79,>radioL80,>radioL81,>radioL82,>radioL83,>radioL84,>radioL85,>radioL86,>radioL87,>radioL88,>radioL89,>radioL90,>radioL91,>radioL92,>radioL93,>radioL94,>radioL95,>radioL96,>radioL97,>radioL98,>radioL99,>radioL100,>radioL101,>radioL102,>radioL103,>radioL104,>radioL105,>radioL106,>radioL107,>radioL108,>radioL109,>radioL110
 .segment "MATH"
-wreckTab: .byte 0,0,0,0,0,0,0,1,0,0,2
+wreckTab: .byte 0,0,0,0,0,0,0,1,0,0,2,3
 ARRAY_X=-200
 ARRAY_Y=0
 ARRAY_Z=900
 CONCORD_TINT=$21
-tintTab: .byte $2C,$2C,$2C,$2C,$2C,$2C,$2C,$2C,$21,$2C,$2C
+tintTab: .byte $2C,$2C,$2C,$2C,$2C,$2C,$2C,$2C,$21,$16,$2C,$2C
 WRECK_X=-700
 WRECK_Y=60
 WRECK_Z=600
-missionModeTab: .byte 0,0,0,0,2,1,0,0,0,3,0
+SIXW_X=500
+SIXW_Y=80
+SIXW_Z=700
+M_LANTERN2=11
+missionModeTab: .byte 0,0,0,0,2,1,0,0,0,3,0,3
 radioMara:
   .byte 0,26,0,27,28,29,30,31,8,9,0,32,12,13,14,15
   .byte 16,17,18,19,20,21,22,23,0,33,26,27,28,29,30,31
@@ -607,7 +636,7 @@ radioMara:
   .byte 48,49,0,0,0,0,64,60,61,62,63,59,60,61,62,63
   .byte 64,66,66,67,68,69,70,71,72,73,74,76,76,77,78,79
   .byte 80,81,82,84,84,86,86,87,88,90,90,92,92,94,94,95
-  .byte 96,97,98,99
+  .byte 96,97,98,99,100,101,102,103,104,105,106,107,108,109,110
 radioRen:
   .byte 0,39,0,0,40,41,0,42,8,9,0,43,12,13,14,15
   .byte 16,17,18,19,20,21,22,23,0,0,26,27,28,29,30,31
@@ -615,7 +644,7 @@ radioRen:
   .byte 48,49,50,51,52,53,54,55,56,57,58,59,60,61,62,63
   .byte 64,65,66,67,68,69,70,71,72,73,74,75,76,77,78,79
   .byte 80,81,82,83,84,85,86,87,88,89,90,91,92,93,94,95
-  .byte 96,97,98,99
+  .byte 96,97,98,99,100,101,102,103,104,105,106,107,108,109,110
 radioSolo:
   .byte 0,0,0,0,0,0,0,0,8,0,0,99,12,0,0,15
   .byte 0,0,0,0,0,0,22,23,0,0,26,27,28,29,30,31
@@ -623,7 +652,7 @@ radioSolo:
   .byte 48,49,0,0,0,0,0,97,0,98,0,59,60,61,62,63
   .byte 64,66,66,67,68,69,70,71,72,73,74,0,76,77,78,79
   .byte 80,81,82,0,84,0,86,87,88,0,90,0,92,0,94,95
-  .byte 96,97,98,99
+  .byte 96,97,98,99,100,101,102,103,104,105,106,107,108,109,110
 mission1:
   .byte 0,188,2,0,0,188,2,9,0,0,0,0,150,0
   .byte 1,12,254,120,0,32,3,2,10,2,4,0,0,0
@@ -673,8 +702,14 @@ mission10:
   .byte 1,44,1,150,0,32,3,93,0,2,4,64,2,0
   .byte 0,56,255,0,0,38,2,95,0,0,0,0,200,0
   .byte 7,56,255,0,0,188,2,96,0,0,0,0,150,0
-missionLo: .byte 0,<mission1,<mission2,<mission3,<mission4,<mission5,<mission6,<mission7,<mission8,<mission9,<mission10
-missionHi: .byte 0,>mission1,>mission2,>mission3,>mission4,>mission5,>mission6,>mission7,>mission8,>mission9,>mission10
+mission11:
+  .byte 1,168,253,60,0,188,2,100,101,2,4,0,0,0
+  .byte 0,200,0,40,0,88,2,102,103,0,0,0,150,0
+  .byte 0,244,1,80,0,188,2,104,105,0,0,0,120,0
+  .byte 4,244,1,80,0,188,2,106,108,2,4,16,107,14
+  .byte 7,244,1,80,0,188,2,0,0,0,1,0,60,0
+missionLo: .byte 0,<mission1,<mission2,<mission3,<mission4,<mission5,<mission6,<mission7,<mission8,<mission9,<mission10,<mission11
+missionHi: .byte 0,>mission1,>mission2,>mission3,>mission4,>mission5,>mission6,>mission7,>mission8,>mission9,>mission10,>mission11
 VIGIL_X=0
 VIGIL_Y=0
 VIGIL_Z=-500
@@ -732,3 +767,6 @@ emask:
   .byte 5,9,17,33,65,34,18,10,6,66,68,12,24,48,96,3
   .byte 5,9,17,18,6,12,24,5,9,17,33,18,10,6,34,36
   .byte 12,24,48,5,17,3,34,10,12,68,136,80,48,160,192
+vmask:
+  .byte 69,13,25,49,97,70,14,26,50,98,19,7,13,25,30,37
+  .byte 13,25,49,38,14,26,50,15,51,204,85,170,240
