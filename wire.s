@@ -1,5 +1,6 @@
 ; Wireframe space-combat prototype for the NES (MMC3, 8K WRAM, 8K CHR RAM).
 ; Letterboxed 192x128 view, tiles allocated per frame, bitplane double-buffer.
+SPARE_START = 6          ; spare fighters aboard the Vigil at the start
 .ifndef NSHIPS
 NSHIPS = 4
 .endif
@@ -19,8 +20,8 @@ RADIO_TILE = 223        ; the radio font; tile 255 is the scratch tile
 MAXSPEED = 20
 HIT_R    = 80            ; laser hit radius around a ship
 HIT_R2   = 3200          ; HIT_R squared / 2
-CRASH_R  = 130           ; closest approach to a ship's centre
-CRASH_R2 = 8450          ; CRASH_R squared / 2
+CRASH_R  = 105           ; closest approach to a ship's centre
+CRASH_R2 = 5512          ; CRASH_R squared / 2
 SHIP_HP  = 2
 .ifndef START_SHIELDS
 START_SHIELDS = 3
@@ -52,8 +53,9 @@ CTRLV   = %10001000      ; NMI on, BG patterns $0000, sprites $1000
 ST_IDLE=0
 ST_PAT=1
 ST_NEW=2
-ST_FLIP=3
-ST_CLEAR=4
+ST_CLEAR=3
+ST_FLIP=4               ; FLIP and ATTR must be the two highest
+ST_ATTR=5               ; tint squares wait to be written below the picture
 ; Tuned against Mesen so rendering starts mid-scanline on line 23.
 .ifndef BUD_B
 BUD_B = 4485
@@ -96,6 +98,9 @@ K_NEXT=125
 .include "src/flight_math.inc"
 .include "src/flight_game.inc"
 .include "src/mission.inc"
+.include "src/tint.inc"
+.include "src/mission2.inc"
+.include "src/mission3.inc"
 .include "src/draw.inc"
 .include "src/ai.inc"
 .include "src/mainloop.inc"

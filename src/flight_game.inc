@@ -466,6 +466,114 @@ reset_hunter:
   rts
 
 ; Adds the square of one world-axis distance to t0/t1; carry set if out of range.
+; ---- big hulls: spheres at the centre and one nose-length either way
+BIG_R  = 80
+BIG_R2 = 3200          ; BIG_R squared / 2
+
+.macro OFFAX arr, ax
+  .local pos, done
+  lda #0
+  sta bigOffL+ax
+  sta bigOffH+ax
+  lda bigK
+  beq done
+  ldx vi
+  lda arr,x
+  ldy bigK
+  cpy #2
+  bne pos
+  eor #$FF
+  clc
+  adc #1
+pos:
+  sta bigOffL+ax
+  ora #0
+  bpl done
+  lda #$FF
+  sta bigOffH+ax
+done:
+.endmacro
+
+.macro BIGAXIS wOff, cOff, ax
+  .local have, ok
+  ldx vi
+  lda shipPosL+wOff,x
+  clc
+  adc bigOffL+ax
+  sta u0
+  lda shipPosH+wOff,x
+  adc bigOffH+ax
+  sta u1
+  lda u0
+  sec
+  sbc camPos+cOff+1
+  sta u0
+  lda u1
+  sbc camPos+cOff+2
+  and #$0F
+  cmp #$08
+  bcc have
+  ora #$F0
+  eor #$FF
+  sta u1
+  lda u0
+  eor #$FF
+  clc
+  adc #1
+  sta u0
+  lda u1
+  adc #0
+have:
+  cmp #0
+  beq ok
+  jmp bigMiss
+ok:
+  ldy u0
+  cpy #BIG_R
+  bcc :+
+  jmp bigMiss
+:
+  lda sqrLo+256,y
+  clc
+  adc t0
+  sta t0
+  lda sqrHi+256,y
+  adc t1
+  sta t1
+.endmacro
+
+; Carry set if the camera is inside ship vi's hull.
+.proc big_hit
+  lda #0
+  sta bigK
+sphere:
+  OFFAX fvX, 0
+  OFFAX fvY, 1
+  OFFAX fvZ, 2
+  lda #0
+  sta t0
+  sta t1
+  BIGAXIS 0, 0, 0
+  BIGAXIS 16, 3, 1
+  BIGAXIS 32, 6, 2
+  lda t0
+  cmp #<BIG_R2
+  lda t1
+  sbc #>BIG_R2
+  bcs bigMiss
+  sec
+  rts
+bigMiss:
+  inc bigK
+  lda bigK
+  cmp #3
+  beq :+
+  jmp sphere
+: clc
+  rts
+.endproc
+bigMiss = big_hit::bigMiss
+
 .macro CDELTA cOff, wOff
   .local neg, have, miss, done
   ldx vi
@@ -522,6 +630,23 @@ ship_:
   beq :+
   jmp noHit            ; Hale and the Vigil never collide with you
 :
+  cpx #4
+  beq small
+  lda missionId
+  beq :+
+  lda protSlot         ; scouts after what you protect aren't aiming at you
+  bne :+
+  lda hBreak,x         ; a scout already peeling away just misses you
+  beq :++
+: jmp noHit
+: lda shipModel,x
+  and #3               ; only the long hulls need the three spheres
+  beq small
+  jsr big_hit          ; three spheres along the hull
+  bcc :+
+  jmp crash
+: jmp noHit
+small:
   lda #0
   sta t0
   sta t1
@@ -558,6 +683,15 @@ boltHit:
   lda #R_LOW
   jsr say_radio
 :
+  ldx boltOwner        ; a lancer's bolt costs two shields
+  lda shipModel,x
+  cmp #8
+  bne :+
+  lda shields
+  cmp #2
+  bcc :+
+  dec shields
+:
   dec shields
   bne :+
   jsr lose_shields
@@ -582,13 +716,20 @@ notBolt:
   sta camPos,x
   dex
   bpl :-
+  lda speed
+  beq :+
+  sta crashSpeed       ; picked up again once the pilot has had time to turn
+  lda #0
+  sta stopT
+:
   lda #0
   sta speed
   lda bumpT
-  bne done
+  bne done             ; one bump, one shield: a second touch soon after is free
   lda #30
-  sta bumpT
   sta crossT
+  lda #75
+  sta bumpT
   inc statCrash
   SFXREQ SFX_CRASH
   dec shields
@@ -799,6 +940,9 @@ miss:
   sta crossT
   inc statHits
   dec hp,x
+  jsr echo_hit         ; the echo drone stops at its last hit
+  ldx hitShip
+  lda hp,x
   beq :+
   SFXREQ SFX_HIT
   lda #R_GOOD
@@ -812,12 +956,24 @@ miss:
   sta respawn,x
   inc score
   lda missionId
-  beq :+
+  beq killSaid
   dec killsLeft
-  beq :+
+  beq killSaid
+  ldx hitShip
   lda #R_ONE
+  ldy shipModel,x
+  beq :+
+  lda #R_HAULER         ; a freighter, not a scout
+  cpy #8
+  bne :+
+  lda #R_LANCERDN
+: cpy #ECHO_MODEL
+  bne :+
+  lda #R_ECHODN
+: ldy #0
+  sty radioT           ; a kill is always called
   jsr say_radio
-:
+killSaid:
   SFXREQ SFX_EXPLO
   ; the explosion starts where the ship was
   ldx #5
@@ -1319,7 +1475,27 @@ LOD_HI = 4               ; high byte of the view depth, so 1024 units
 .proc select_model
   ldx ship
   lda shipModel,x
-  beq :+
+  beq :++
+  cmp #ECHO_MODEL      ; the echo drone wears a scout's hull
+  beq :++
+  cmp #8
+  bne :+
+  lda #0               ; lancer
+  sta mShift
+  lda #NV+NV2+NV3
+  sta vFirst
+  lda #NV+NV2+NV3+NV4
+  sta vEnd
+  lda #NF+NF2+NF3
+  sta fFirst
+  lda #NF+NF2+NF3+NF4-1
+  sta fLast
+  lda #NE+NE2+NE3
+  sta eFirst
+  lda #NE+NE2+NE3+NE4-1
+  sta eLast
+  rts
+: and #3               ; slab hull at a scale
   sta mShift
   lda #NV+NV2
   sta vFirst
@@ -2473,5 +2649,5 @@ clip:
   rts
 .endproc
 
-bitMask: .byte 1,2,4,8,16,32,64,1,2,4,8,16,1,2,4,8,16,32
+bitMask: .byte 1,2,4,8,16,32,64,1,2,4,8,16,1,2,4,8,16,32,1,2,4,8,16,32,64,128
 

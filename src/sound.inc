@@ -117,10 +117,11 @@ radio_tick:
   sec
   sbc #1
   ldx #0               ; ten lines of 24 fit in an index: page them
-  cmp #10
+: cmp #10
   bcc :+
   sbc #10
-  ldx #1
+  inx
+  bne :-
 :
   stx radioPage
   asl a
@@ -166,20 +167,29 @@ radio_row:
   bne :-
   rts
 :
+;  one copy of the copy loop per page of ten lines
   lda radioPage
-  bne :++
-: lda radioText,x
+  asl a
+  tay
+  lda radioPages+1,y
+  pha
+  lda radioPages,y
+  pha
+  ldy #24
+  rts                  ; jumps to the page's loop
+.repeat RADIO_PAGES, P
+.ident(.sprintf("radioPage%d", P)):
+  lda .ident(.sprintf("radioT%d", P)),x
   sta PPUDATA
   inx
   dey
-  bne :-
+  bne .ident(.sprintf("radioPage%d", P))
   rts
-: lda radioText+240,x
-  sta PPUDATA
-  inx
-  dey
-  bne :-
-  rts
+.endrep
+radioPages:
+.repeat RADIO_PAGES, P
+  .word .ident(.sprintf("radioPage%d", P))-1
+.endrep
 
 sound_tick:
   jsr read_pad

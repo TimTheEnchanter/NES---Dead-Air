@@ -359,11 +359,18 @@ m2Go:
   .word m2Win,m2Lose
 m2Lose:
   .byte 5,8
+m2Lost:
+  .byte 15
   .byte 11,1
   .byte 1,1
   .byte "We lost the convoy, Six.",2
   .byte "We are on half rations by",2
   .byte "the end of the week.",2
+  .byte 3
+  .byte 1,3
+  .byte "No parts either. Strip one",2
+  .byte "of the spare fighters to",2
+  .byte "keep the rest flying.",2
   .byte 3
   .byte 1,3
   .byte "Then we will be hungry.",2
@@ -372,6 +379,8 @@ m2Lose:
   .byte 6
   .word m2Ren
 m2Win:
+  .byte 10,8
+  .word m2Lost
   .byte 11,1
   .byte 1,0
   .byte "Full holds and nobody shot",2
@@ -416,15 +425,569 @@ m2Ren:
   .byte "leave out there?",2
   .byte 3
   .byte 8,1
-m2End:
+sceneM3:
+  .byte 11,0
+  .byte 1,2
+  .byte "An old Concord relay buoy",2
+  .byte "at Kesh woke up last",2
+  .byte "night.",2
+  .byte 3
+  .byte 1,3
+  .byte "It is broadcasting on",2
+  .byte "Lantern codes. Anyone",2
+  .byte "listening could trace it",2
+  .byte "to us.",2
+  .byte 3
+  .byte 1,6
+  .byte "Sir, if the voice is using",2
+  .byte "that buoy, I could learn",2
+  .byte "where it comes from.",2
+  .byte 3
+  .byte 1,3
+  .byte "So could the Serrath. Six,",2
+  .byte "Hale: kill the buoy.",2
+  .byte 3
+  .byte 1,0
+  .byte "Shooting the mailbox.",2
+  .byte "Easiest job all month.",2
+  .byte 3
+  .byte 10,8
+  .word m3Short
+  .byte 6
+  .word m3Go
+m3Short:
+  .byte 1,3
+  .byte "And fly carefully. We",2
+  .byte "cannot spare another",2
+  .byte "fighter.",2
+  .byte 3
+m3Go:
+  .byte 7,3
+  .word m3Win,m3Lose
+m3Lose:
+  .byte 15
+  .byte 11,1
+  .byte 1,1
+  .byte "I took a hit covering you.",2
+  .byte "If she had not warned us,",2
+  .byte "we would both be gone.",2
+  .byte 3
+  .byte 1,1
+  .byte "Commander, that voice",2
+  .byte "saved our lives out there.",2
+  .byte 3
+  .byte 6
+  .word m3Deck
+m3Win:
+  .byte 11,1
+  .byte 1,0
+  .byte "Six, it knew. It called",2
+  .byte "the ambush before they",2
+  .byte "jumped us.",2
+  .byte 3
+  .byte 1,0
+  .byte "Whoever that is, she saved",2
+  .byte "our necks.",2
+  .byte 3
+m3Deck:
+  .byte 1,3
+  .byte "Or she set the trap and",2
+  .byte "wanted us grateful.",2
+  .byte 3
+  .byte 1,3
+  .byte "Okafor, shut that channel",2
+  .byte "down and purge every",2
+  .byte "recording. That is an",2
+  .byte "order.",2
+  .byte 3
+  .byte 1,6
+  .byte "... Yes, sir.",2
+  .byte 3
+  .byte 11,2
+  .byte 1,4
+  .byte "So she called the ambush.",2
+  .byte "Teller always did see",2
+  .byte "trouble coming.",2
+  .byte 3
+  .byte 1,5
+  .byte "She always broke high and",2
+  .byte "left, too. I told her it",2
+  .byte "would get her killed one",2
+  .byte "day.",2
+  .byte 3
+  .byte 1,4
+  .byte "If that is really her, I",2
+  .byte "want to hear it from her.",2
+  .byte "Not from a buoy.",2
+  .byte 3
+  .byte 1,6
+  .byte "Six. They purged the",2
+  .byte "recordings, but I kept a",2
+  .byte "copy.",2
+  .byte 3
+  .byte 1,6
+  .byte "There is an old listening",2
+  .byte "post at Hollow Reach. From",2
+  .byte "there I could hear her",2
+  .byte "clearly.",2
+  .byte 3
+  .byte 1,6
+  .byte "I cannot fly the shuttle",2
+  .byte "out there alone.",2
+  .byte 3
+  .byte 1,6
+  .byte "Will you take me?",2
+  .byte 4
+  .word m3Ren,m3Voss
+  .byte "I will fly you.",2
+  .byte "Voss should know.",2
+m3Ren:
+  .byte 5,16
+  .byte 1,6
+  .byte "Thank you. Before first",2
+  .byte "watch, then. Tell no one,",2
+  .byte "not even Hale.",2
+  .byte 3
+  .byte 6
+  .word m3Save
+m3Voss:
+  .byte 1,6
+  .byte "Then go and tell him. I",2
+  .byte "thought you of all people",2
+  .byte "would want to know.",2
+  .byte 3
+m3Save:
+  .byte 8,2
+m4Start:
+  .byte 10,16
+  .word scene4A
+  .byte 6
+  .word scene4B
+scene4A:
+  .byte 11,1
+  .byte 1,6
+  .byte "The shuttle is fueled.",2
+  .byte "Hale is covering the deck",2
+  .byte "log for us.",2
+  .byte 3
+  .byte 1,0
+  .byte "You two owe me. If Voss",2
+  .byte "asks, I never saw a thing.",2
+  .byte 3
+  .byte 1,1
+  .byte "Bring her back in one",2
+  .byte "piece, Six.",2
+  .byte 3
+  .byte 1,6
+  .byte "Keep them off the shuttle.",2
+  .byte "I will do the listening.",2
+  .byte 3
+  .byte 7,4
+  .word m4aWin,m4aLose
+m4aLose:
+  .byte 17,1
+  .byte 11,1
+  .byte 1,6
+  .byte "Six... my head. It was",2
+  .byte "like all of them were",2
+  .byte "shouting at once.",2
+  .byte 3
+  .byte 1,1
+  .byte "She is bleeding, Six. Get",2
+  .byte "her to the medbay.",2
+  .byte 3
+  .byte 6
+  .word m4aAfter
+m4aWin:
+  .byte 11,1
+  .byte 1,6
+  .byte "Dozens of them, Six. All",2
+  .byte "Lanterns. All still",2
+  .byte "talking.",2
+  .byte 3
+  .byte 1,6
+  .byte "And the signal gets louder",2
+  .byte "whenever you fly. As if it",2
+  .byte "knows you.",2
+  .byte 3
+m4aAfter:
+  .byte 1,3
+  .byte "Okafor. You took a shuttle",2
+  .byte "without orders.",2
+  .byte 3
+  .byte 1,3
+  .byte "You are grounded until I",2
+  .byte "say otherwise.",2
+  .byte 3
+  .byte 1,2
+  .byte "Six. We will talk about",2
+  .byte "this later.",2
+  .byte 3
+  .byte 11,2
+  .byte 1,5
+  .byte "You flew her out there to",2
+  .byte "listen to ghosts.",2
+  .byte 3
+  .byte 1,5
+  .byte "Do not sit here, Six. Not",2
+  .byte "tonight.",2
+  .byte 3
+  .byte 6
+  .word m4Save
+scene4B:
+  .byte 11,0
+  .byte 1,2
+  .byte "Okafor wants to use the",2
+  .byte "old listening post at",2
+  .byte "Hollow Reach.",2
+  .byte 3
+  .byte 1,3
+  .byte "I want it gone before she",2
+  .byte "can. Thank you for telling",2
+  .byte "me, Six.",2
+  .byte 3
+  .byte 1,3
+  .byte "Dray flies your wing. Hale",2
+  .byte "stays aboard.",2
+  .byte 3
+  .byte 1,4
+  .byte "Good. Let us end this.",2
+  .byte 3
+  .byte 7,5
+  .word m4bWin,m4bLose
+m4bLose:
+  .byte 15
+  .byte 11,1
+  .byte 1,5
+  .byte "The post is still",2
+  .byte "standing, and we lost a",2
+  .byte "fighter getting nowhere.",2
+  .byte 3
+  .byte 1,3
+  .byte "Then I send another team.",2
+  .byte "Another fighter we cannot",2
+  .byte "spare.",2
+  .byte 3
+  .byte 6
+  .word m4bBar
+m4bWin:
+  .byte 11,1
+  .byte 1,4
+  .byte "It is done. Six... at the",2
+  .byte "end, did you hear",2
+  .byte "something?",2
+  .byte 3
+  .byte 1,5
+  .byte "No. Forget I asked.",2
+  .byte 3
+m4bBar:
+  .byte 11,2
+  .byte 1,4
+  .byte "You were never the same",2
+  .byte "after Corvane, you know.",2
+  .byte 3
+  .byte 1,4
+  .byte "None of us were. But you",2
+  .byte "most of all.",2
+  .byte 3
+  .byte 1,6
+  .byte "I have nothing to say to",2
+  .byte "you, Six.",2
+  .byte 3
+  .byte 17,2
+m4Save:
+  .byte 8,3
+sceneM5:
+  .byte 11,0
+  .byte 1,2
+  .byte "A Serrath picket has found",2
+  .byte "our hiding place. If it",2
+  .byte "reports, we are finished.",2
+  .byte 3
+  .byte 1,3
+  .byte "Every fighter flies.",2
+  .byte "Nobody comes home until",2
+  .byte "that picket is silent.",2
+  .byte 3
+  .byte 10,16
+  .word m5Grounded
+  .byte 6
+  .word m5Hale
+m5Grounded:
+  .byte 1,3
+  .byte "Okafor stays grounded.",2
+  .byte "Keep the channel clean.",2
+  .byte 3
+m5Hale:
+  .byte 1,0
+  .byte "Every fighter means me",2
+  .byte "too, Six. Try to keep up.",2
+  .byte 3
+  .byte 7,6
+  .word m5Win,m5Lose
+m5Lose:
+  .byte 15
+  .byte 11,1
+  .byte 1,3
+  .byte "The picket got a signal",2
+  .byte "out. We move tonight, and",2
+  .byte "we lose another fighter",2
+  .byte "doing it.",2
+  .byte 3
+  .byte 6
+  .word m5After
+m5Win:
+  .byte 11,1
+  .byte 1,2
+  .byte "The picket is silent. Good",2
+  .byte "work, Six.",2
+  .byte 3
+m5After:
+  .byte 18,4
+  .word m5Lost
+  .byte 1,1
+  .byte "That one on my tail... I",2
+  .byte "owe you, Six.",2
+  .byte 3
+  .byte 1,0
+  .byte "If I do not make it home,",2
+  .byte "tell my daughter about me.",2
+  .byte "Promise me.",2
+  .byte 3
+  .byte 6
+  .word m5Bar
+m5Lost:
+  .byte 1,5
+  .byte "Hale is gone, Six. I heard",2
+  .byte "it on the open channel.",2
+  .byte 3
+  .byte 1,2
+  .byte "Tomas Hale. Log it.",2
+  .byte 3
+m5Bar:
+  .byte 11,2
+  .byte 18,4
+  .word m5Seat
+  .byte 6
+  .word m5Mara
+m5Seat:
+  .byte 1,4
+  .byte "His seat stays empty.",2
+  .byte "Nobody sits there.",2
+  .byte 3
+  .byte 1,5
+  .byte "From now on, I fly your",2
+  .byte "wing.",2
+  .byte 3
+m5Mara:
+  .byte 1,4
+  .byte "That last ship broke high",2
+  .byte "and left.",2
+  .byte 3
+  .byte 1,5
+  .byte "Teller always did that.",2
+  .byte "Always. I told her it",2
+  .byte "would get her killed.",2
+  .byte 3
+  .byte 18,2
+  .word m5Apology
+  .byte 18,1
+  .word m5Hurt
+  .byte 1,6
+  .byte "It flew like her, Six. I",2
+  .byte "heard it in the static",2
+  .byte "too.",2
+  .byte 3
+  .byte 6
+  .word m5Save
+m5Hurt:
+  .byte 1,6
+  .byte "My head still rings, Six.",2
+  .byte "But I can hear them more",2
+  .byte "clearly now.",2
+  .byte 3
+  .byte 6
+  .word m5Save
+m5Apology:
+  .byte 1,6
+  .byte "...",2
+  .byte 3
+  .byte 1,7
+  .byte "You find Ren alone.",2
+  .byte 4
+  .word m5Sorry,m5Save
+  .byte "I am sorry.",2
+  .byte "Say nothing.",2
+m5Sorry:
+  .byte 17,16
+  .byte 1,6
+  .byte "Thank you. I have not",2
+  .byte "slept, Six. The voices are",2
+  .byte "louder every night.",2
+  .byte 3
+m5Save:
+  .byte 8,4
+sceneM6:
+  .byte 11,0
+  .byte 1,2
+  .byte "Long range picked up a",2
+  .byte "wreck drifting into the",2
+  .byte "Vey lane. Concord",2
+  .byte "registry: Ashgrove.",2
+  .byte 3
+  .byte 1,6
+  .byte "Ashgrove was an",2
+  .byte "intelligence ship,",2
+  .byte "Commander. She was at",2
+  .byte "Corvane.",2
+  .byte 3
+  .byte 1,3
+  .byte "... Then we strip her",2
+  .byte "before the Serrath do.",2
+  .byte "Okafor, you are cleared to",2
+  .byte "fly.",2
+  .byte 3
+  .byte 1,5
+  .byte "Intelligence ships keep",2
+  .byte "records. Of everything.",2
+  .byte 3
+  .byte 18,4
+  .word m6Mara
+  .byte 1,0
+  .byte "Reading someone else's",2
+  .byte "mail. My favourite.",2
+  .byte 3
+  .byte 6
+  .word m6Go
+m6Mara:
+  .byte 1,4
+  .byte "I am on your wing, Six.",2
+  .byte "Stay close to the wreck.",2
+  .byte 3
+m6Go:
+  .byte 7,7
+  .word m6Win,m6Lose
+m6Lose:
+  .byte 15
+  .byte 15
+  .byte 11,1
+  .byte 1,6
+  .byte "We got out with part of",2
+  .byte "it. Enough. But we left",2
+  .byte "two fighters behind.",2
+  .byte 3
+  .byte 6
+  .word m6Truth
+m6Win:
+  .byte 11,1
+  .byte 1,6
+  .byte "I have it. All of it.",2
+  .byte 3
+m6Truth:
+  .byte 11,0
+  .byte 1,6
+  .byte "These are the Ashgrove's",2
+  .byte "orders. Concord",2
+  .byte "intelligence found the",2
+  .byte "Array before the battle.",2
+  .byte 3
+  .byte 1,6
+  .byte "Commander Voss was part of",2
+  .byte "that operation.",2
+  .byte 3
+  .byte 1,5
+  .byte "And the retreat? Who",2
+  .byte "ordered it?",2
+  .byte 3
+  .byte 1,6
+  .byte "He did. To keep the",2
+  .byte "Serrath from studying the",2
+  .byte "Array. Half the Lanterns",2
+  .byte "were still out there.",2
+  .byte 3
+  .byte 1,5
+  .byte "Teller was still out",2
+  .byte "there.",2
+  .byte 3
+  .byte 1,2
+  .byte "... Yes.",2
+  .byte 3
+  .byte 1,6
+  .byte "There is more. Six, your",2
+  .byte "file.",2
+  .byte 3
+  .byte 1,7
+  .byte "LANTERN SIX: KILLED IN",2
+  .byte "ACTION, CORVANE.",2
+  .byte 3
+  .byte 1,7
+  .byte "LANTERN SIX: RECOVERED.",2
+  .byte "NINE MINUTES LATER.",2
+  .byte 3
+  .byte 1,6
+  .byte "Nine minutes, Six. You",2
+  .byte "were dead for nine",2
+  .byte "minutes.",2
+  .byte 3
+  .byte 18,4
+  .word m6Plans
+  .byte 1,1
+  .byte "That is not possible. Six,",2
+  .byte "tell me that is not",2
+  .byte "possible.",2
+  .byte 3
+m6Plans:
+  .byte 1,3
+  .byte "I will not defend what I",2
+  .byte "did. But we have to decide",2
+  .byte "what happens now.",2
+  .byte 3
+  .byte 1,2
+  .byte "We send these records to",2
+  .byte "Concord command, and hold",2
+  .byte "the Vigil until they come.",2
+  .byte 3
+  .byte 1,6
+  .byte "Or we go to Corvane",2
+  .byte "ourselves, before the",2
+  .byte "Serrath finish what they",2
+  .byte "started.",2
+  .byte 3
+  .byte 1,7
+  .byte "Whose plan do you back?",2
+  .byte 4
+  .word m6Voss,m6Ren
+  .byte "Voss: tell Concord.",2
+  .byte "Ren: go to Corvane.",2
+m6Voss:
+  .byte 17,32
+  .byte 1,2
+  .byte "Thank you, Six. Whatever",2
+  .byte "they do to me.",2
+  .byte 3
+  .byte 6
+  .word m6Save
+m6Ren:
+  .byte 1,6
+  .byte "Then we go quietly. I know",2
+  .byte "a way past the picket.",2
+  .byte 3
+m6Save:
+  .byte 8,5
+m6End:
   .byte 11,3
   .byte 1,7
-  .byte "End of Mission 2. Progress",2
+  .byte "End of Mission 6. Progress",2
   .byte "saved.",2
   .byte 3
   .byte 1,7
+  .byte "Spare fighters: "
+  .byte 16
+  .byte ".",2
+  .byte 3
+  .byte 1,7
   .byte "The story continues in",2
-  .byte "Mission 3, which is not",2
+  .byte "Mission 7, which is not",2
   .byte "built yet.",2
   .byte 3
   .byte 13
@@ -433,4 +996,12 @@ saveTab:
   .byte 4
   .word sceneM2
   .byte 4
-  .word m2End
+  .word sceneM3
+  .byte 4
+  .word m4Start
+  .byte 4
+  .word sceneM5
+  .byte 4
+  .word sceneM6
+  .byte 4
+  .word m6End

@@ -51,6 +51,7 @@ main:
   sta lpHi+1
   lda #1
   sta nextTile
+  jsr tint_start
   jsr update_player
   jsr update_fire
   lda #0
@@ -94,7 +95,8 @@ main:
   jsr select_model
   jsr build_ship_rot
   jsr build_m
-  lda mShift
+  ldx ship
+  lda shipModel,x      ; hulls other than the scout use the exact face test
   bne @closeFaces
   lda vFirst
   bne @farFaces
@@ -119,6 +121,12 @@ main:
   jsr build_mat
   jsr transform
 @xdone:
+  ldx ship
+  lda shipModel,x
+  cmp #ECHO_MODEL
+  bne :+
+  jsr tint_mark
+:
   MARK 5
   jsr draw_edges
   MARK 6
@@ -213,6 +221,7 @@ main:
   lda shields
   sta statShields
   ; hand off to the interrupt side
+  jsr tint_send
   lda nextTile
   sta jobCnt
   lda drawIdx

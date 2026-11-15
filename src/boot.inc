@@ -130,7 +130,21 @@ irq:
   sta bud
   lda #>BUD_A
   sta bud+1
-  jsr run_xfer
+  lda tintSend         ; leave room for the tint squares
+  beq :+
+  lda #<(BUD_A-ATTR_COST)
+  sta bud
+  lda #>(BUD_A-ATTR_COST)
+  sta bud+1
+: jsr run_xfer
+  lda xfState
+  cmp #ST_ATTR
+  bne :+
+  jsr write_attrs
+  lda #ST_FLIP
+  sta xfState
+:
+  jsr tint_palette     ; the tint palette follows the coming flip
   pla
   tay
   pla
@@ -140,8 +154,11 @@ irq:
 
 palA: .byte $30,$0F
 palB: .byte $0F,$30
+TINT = $2C              ; the echo drone's colour
+palC: .byte TINT,$0F
+palD: .byte $0F,TINT
 palette:
-  .byte $0F,$30,$0F,$30, $0F,$0F,$0F,$0F, $0F,$0F,$0F,$0F, $0F,$0F,$0F,$0F
+  .byte $0F,$30,$0F,$30, $0F,TINT,$0F,TINT, $0F,$0F,$0F,$0F, $0F,$0F,$0F,$0F
   .byte $0F,$2A,$1A,$30, $0F,$16,$16,$16, $0F,$27,$17,$30, $0F,$0F,$0F,$0F
 boltTiles:
   .byte $00,$18,$3C,$3C,$18,$00,$00,$00, 0,0,0,0,0,0,0,0

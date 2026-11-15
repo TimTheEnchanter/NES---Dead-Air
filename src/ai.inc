@@ -74,7 +74,9 @@ noBolt:
 move:
   stx ei
   lda alive,x
-  beq next
+  bne :+
+  jmp next
+:
   lda shipPosL,x
   sta hSaveL,x
   lda shipPosL+16,x
@@ -87,6 +89,11 @@ move:
   sta hSaveH+16,x
   lda shipPosH+32,x
   sta hSaveH+32,x
+  lda hPassive,x
+  cmp #2
+  bne :+
+  jmp next             ; a fixed target
+:
   stx advI
   lda fvX,x
   sta curV
@@ -94,6 +101,23 @@ move:
   sta curV+1
   lda fvZ,x
   sta curV+2
+  cpx #HALE
+  bne notShuttle
+  lda missionMode
+  cmp #2
+  bne notShuttle
+  lda mPhase           ; Ren's shuttle: slow, and it holds at the nav point
+  beq :+
+  jmp next
+: lda dt
+  jmp go
+notShuttle:
+  lda shipModel,x
+  cmp #8
+  bne notLancer
+  SCALEDT 3            ; lancers are slow
+  jmp go
+notLancer:
   lda hBreak,x
   bne fast
   lda hTurn,x
@@ -146,8 +170,16 @@ have:
 .proc ai_target
   lda ei
   cmp #HALE
-  bne player
-  ldx #0
+  bne enemyT
+  lda guardOn          ; with a scout on his tail, Hale runs to you for help
+  beq :+
+  jmp player
+: lda missionMode
+  cmp #2
+  bne :+
+  ldx #5               ; the shuttle heads for the nav point
+  jmp have
+: ldx #0
   lda alive
   bne have
   inx
@@ -167,6 +199,20 @@ have:
   lda shipPosH+32,x
   sta aiTZ+1
   rts
+enemyT:
+  lda guardOn          ; the scout on Hale's tail
+  beq :+
+  lda ei
+  bne :+
+  lda alive+HALE
+  beq :+
+  ldx #HALE
+  jmp have
+: ldx protSlot         ; scouts go for whatever you are protecting
+  beq player
+  lda alive,x
+  beq player
+  jmp have
 player:
   lda camPos+1
   sta aiTX
@@ -287,6 +333,13 @@ player:
   sta eF
   ; close to the target: start a break-away
   ldx ei
+  cpx #HALE
+  bne :+
+  lda missionMode
+  cmp #2
+  bne :+
+  jmp steer            ; the shuttle never breaks away: it is going there
+:
   lda hBreak,x
   bne breaking
   ; true distance, not just the part along the nose
@@ -316,6 +369,7 @@ breaking:
   asl a
   asl a
   sta advI
+  jsr echo_break       ; Teller's habit: high and left
   ADDYAW advI
 :
   jmp pitchDone
@@ -446,7 +500,12 @@ pitchDone:
   bne enemy
   jmp hale_shoots
 enemy:
-  lda alive+4
+  ldx ei
+  lda shipModel,x
+  cmp #ECHO_MODEL
+  bne :+
+  rts                  ; the echo drone never fires on you
+: lda alive+4
   beq :+
   rts
 :
@@ -476,6 +535,7 @@ enemy:
   sta boltLife
   jsr reload_len
   sta hCool,x
+  stx boltOwner
   inc statShots
   SFXREQ SFX_ENEMY
   lda #R_BOLT
@@ -498,6 +558,11 @@ reload_len:
 ; Hale's shots are not simulated. A good firing position wears a scout down,
 ; but only the player can finish it.
 hale_shoots:
+  lda missionMode
+  cmp #2
+  bcc :+
+  rts                  ; the shuttle is unarmed; mode 3 has no wingman
+:
   lda #24
   ldx ei
   sta hCool,x
@@ -510,6 +575,9 @@ hale_shoots:
 :
   lda alive,x
   beq :+
+  lda shipModel,x
+  cmp #ECHO_MODEL      ; leave the echo drone to the player
+  beq :+
   lda hp,x
   cmp #2
   bcc :+
@@ -521,10 +589,26 @@ hale_shoots:
 
 ; Queues a line unless one has only just appeared. A = line number.
 say_radio:
+  ldx missionMode      ; Mara's, Ren's or nobody's version of the wingman lines
+  beq sayDirect
+  tay
+  cpx #1
+  bne :+
+  lda radioMara,y
+  jmp sayMapped
+: cpx #2
+  bne :+
+  lda radioRen,y
+  jmp sayMapped
+: lda radioSolo,y
+sayMapped:
+  cmp #0
+  beq saySkip          ; nobody says it
+sayDirect:
   ldx radioT
   cpx #90
-  bcs :+
+  bcs saySkip
   sta radioReq
-:
+saySkip:
   rts
 

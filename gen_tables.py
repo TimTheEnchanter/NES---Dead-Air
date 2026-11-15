@@ -54,6 +54,22 @@ for i,f in enumerate(F3_raw):
         k=(min(a,b),max(a,b)); E3[k]=E3.get(k,0)|(1<<i)
 assert len(E3)==12
 
+# Lancer: a broad, heavy arrowhead. Convex, 6 verts, 8 triangles, 12 edges.
+V4=[(0,0,95),(-75,0,-30),(75,0,-30),(0,26,-35),(0,-20,-35),(0,0,-60)]
+import itertools
+F4=[]
+for a,b,c in itertools.combinations(range(len(V4)),3):
+    n=cross(sub(V4[b],V4[a]),sub(V4[c],V4[a]))
+    side=[dot(n,sub(V4[k],V4[a])) for k in range(len(V4)) if k not in (a,b,c)]
+    if all(s<0 for s in side): F4.append([a,b,c])
+    elif all(s>0 for s in side): F4.append([a,c,b])
+assert len(F4)==8,F4
+E4={}
+for i,f in enumerate(F4):
+    for a,b in zip(f,f[1:]+f[:1]):
+        k=(min(a,b),max(a,b)); E4[k]=E4.get(k,0)|(1<<i)
+assert len(E4)==12 and max(math.dist(v,(0,0,0)) for v in V4)<=100
+
 R=max(math.dist(v,(0,0,0)) for v in V)
 assert R<=100, R
 def recip(z,s): return min(127,round(127*s*D/(D+z)))
@@ -151,43 +167,123 @@ o.write('radioFont:\n')
 for c in RC: o.write('  .byte '+','.join(str(v) for v in FONTROM[ord(c)*16:ord(c)*16+8])+'\n')
 RL=[('WING','HALE: ON YOUR WING, SIX.'),('TALLY','HALE: TWO SCOUTS AHEAD.'),('GOOD','HALE: GOOD HIT, SIX!'),('ONE','HALE: SCOUT DOWN!'),('BOLT','HALE: BREAK, SIX! BREAK!'),('HALE_HIT','HALE: I TAGGED ONE!'),('LOW','HALE: SHIELDS LOW, SIX!'),('STATIC',"... ANTERN ... IX ..."),
  ('NAV','HALE: NAV ONE. QUIET.'),('CLEAR','HALE: SCOUTS DOWN. NICE.'),('HOME','HALE: TAKE US HOME, SIX.'),('LAND','VIGIL: CLEAR TO LAND.'),
- ('CONVOY','HALE: CONVOY AHEAD!'),('CARGO','HALE: CARGO SECURED!'),('VOICE',"... SIX ... CAN YOU HEAR"),('EMPTY','HALE: NOTHING OUT HERE.')]
-o.write('radioText:\n')
+ ('CONVOY','HALE: CONVOY AHEAD!'),('CARGO','HALE: CARGO SECURED!'),('VOICE',"... SIX ... CAN YOU HEAR"),('EMPTY','HALE: NOTHING OUT HERE.'),('RUN',"HALE: THEY'RE RUNNING!"),('JUMPED','HALE: CONVOY JUMPED!'),('ONEAWAY','HALE: ONE GOT AWAY.'),
+ ('BUOY',"HALE: THERE'S THE BUOY."),('BUOYDEAD',"HALE: BUOY'S DEAD."),('TBEHIND','TELLER: SIX, BEHIND YOU!'),('TNEXT','TELLER: NEXT POINT. TWO.'),('HAULER','HALE: ONE HAULER DOWN!'),
+ ('LANCERDN','HALE: LANCER DOWN!'),
+ # Mara on your wing
+ ('M_WING','MARA: ON YOUR WING, SIX.'),('M_GOOD','MARA: GOOD HIT.'),('M_ONE','MARA: SCOUT DOWN.'),('M_BOLT','MARA: BREAK, SIX!'),
+ ('M_HIT','MARA: TAGGED ONE.'),('M_LOW','MARA: SHIELDS LOW, SIX!'),('M_HOME','MARA: TAKE US HOME.'),('M_LANCERDN','MARA: LANCER DOWN.'),
+ ('M_QUIET','MARA: QUIET. TOO QUIET.'),('M_LANCER','MARA: LANCER! WATCH IT.'),('M_POSTAHEAD','MARA: CLEAR. POST AHEAD.'),
+ ('M_POST',"MARA: THERE'S THE POST."),('T_FLY','TELLER: THEY MAKE US FLY'),
+ # Ren in the shuttle
+ ('R_WING',"REN: SHUTTLE'S UP, SIX."),('R_ONE',"REN: THAT'S ONE!"),('R_BOLT',"REN: THEY'RE FIRING!"),('R_LOW','REN: SIX, YOUR SHIELDS!'),
+ ('R_HOME','REN: TAKE US HOME, SIX.'),('RENHIT',"REN: WE'RE HIT, SIX!"),('RENFAIL','REN: SHUTTLE FAILING!'),
+ ('R_LISTEN','REN: LISTENING. HOLD ON.'),('R_MORE','REN: MORE THAN ONE VOICE'),('R_OURS',"REN: THEY'RE ALL OURS."),
+ ('R_BEHIND','REN: SIX, BEHIND US!'),
+ # Mission 5: Hale in danger, and the echo drone
+ ('ONTAIL',"HALE: ONE'S ON MY TAIL!"),('HURRY','HALE: SIX! HURRY!'),('THANKS','HALE: THANKS, SIX!'),('HALEHIT',"HALE: I'M HIT, SIX..."),
+ ('ECHOCONTACT','HALE: ONE CONTACT. ALONE'),('ECHOSTOP','HALE: IT STOPPED. SIX?'),('HIGHLEFT','HALE: HIGH AND LEFT...'),
+ ('THATSHER',"HALE: SIX, THAT'S TELLER"),('ECHODN',"HALE: IT'S GONE."),('ECHOLEFT','...      SIX      ...'),
+ ('M_ECHOSTOP','MARA: IT STOPPED.'),('M_HIGHLEFT','MARA: HIGH AND LEFT...'),('M_THATSHER',"MARA: THAT'S HER. JUN."),('M_ECHODN',"MARA: IT'S GONE."),
+ ('M_ECHOCONTACT','MARA: ONE CONTACT. ALONE'),
+ ('ASH','HALE: ASHGROVE AHEAD.'),('M_ASH','MARA: ASHGROVE AHEAD.'),('DOCKED','REN: DOCKED. COPYING.'),
+ ('ORDERS','REN: GOT THE ORDERS.'),('YOURFILE','REN: SIX... YOUR FILE.'),('WRECKHIT',"REN: THEY'RE HITTING US!"),
+ ('WRECKLOW',"REN: HULL'S BREAKING UP!"),
+ ('V_ECHOSTOP','REN: IT STOPPED, SIX.'),('V_THATSHER',"REN: SIX... THAT'S HER."),('V_HOME','VIGIL: COME HOME, SIX.')]
+# Radio text is only ever shown in flight: the first pages live in the flight
+# bank, the rest in the fixed CODE bank. One label per page of ten lines.
+FLIGHT_PAGES=5
+o.write(f'RADIO_PAGES={(len(RL)+9)//10}\n')
 for i,(n,t) in enumerate(RL):
     assert len(t)<=24,t
+    if i%10==0:
+        o.write('.segment "%s"\nradioT%d:\n'%('FLIGHT' if i//10<FLIGHT_PAGES else 'CODE',i//10))
     o.write('  .byte '+','.join(str(223+RC.index(c) if c!=' ' else 0) for c in t.center(24))+'\n')
     o.write(f'R_{n}={i+1}\n')
+o.write('.segment "MATH"\n')
 # ---- missions: one 13-byte step per nav point
-EMPTY,FIGHT,LAND=0,1,2
-def step(kind,x,y,z,arrive,clear,count=0,hp=0,fre=0,wait=0):
-    return (kind,x&255,(x>>8)&255,y&255,(y>>8)&255,z&255,(z>>8)&255,arrive,clear,count,hp,fre,wait)
+EMPTY,FIGHT,LAND,AMBUSH,DEFEND=0,1,2,3,4
+BIG=0x40   # with HOLD: a target twice the size
+LANCER0=4  # freighter-byte bit: slot 0 is a lancer
+ECHO=0x20  # freighter-byte bit: slot 0 is the echo drone
+GUARD=5
+PROTECT=0x10  # freighter byte on a defend step: the wreck takes the hits
+WRECK=(-700,60,600)
+HOLD=0x80   # freighter bits: the targets stay put, standing on end
+import os
+LIMIT_M2=int(os.environ.get('LIMIT_M2','11'))
+# limit: a fight's time limit in units of 256 frames (about 4.3 s); survivors escape
+def step(kind,x,y,z,arrive,clear,count=0,hp=0,fre=0,wait=0,limit=0):
+    return (kind,x&255,(x>>8)&255,y&255,(y>>8)&255,z&255,(z>>8)&255,arrive,clear,count,hp,fre,wait,limit)
 RN={n:i+1 for i,(n,_) in enumerate(RL)}
 VIGIL=(0,0,-500)
+# Keep every point within about 1300 units of the Vigil on each axis: the world
+# wraps at 4096, so anything past 2048 shows the carrier ahead of you.
 MISSIONS=[
- [step(EMPTY,700,0,900,RN['NAV'],0,wait=150),
-  step(FIGHT,-400,120,1700,RN['TALLY'],RN['CLEAR'],count=2,hp=4),
-  step(EMPTY,-1200,0,700,RN['STATIC'],RN['HOME'],wait=240),
+ [step(EMPTY,700,0,700,RN['NAV'],0,wait=150),
+  step(FIGHT,-500,120,800,RN['TALLY'],RN['CLEAR'],count=2,hp=4),
+  step(EMPTY,-1100,0,-200,RN['STATIC'],RN['HOME'],wait=240),
   step(LAND,*VIGIL,RN['LAND'],0)],
- [step(EMPTY,-800,100,1000,RN['EMPTY'],0,wait=120),
-  step(FIGHT,600,-80,1800,RN['TALLY'],RN['CLEAR'],count=2,hp=4),
-  step(FIGHT,1500,60,700,RN['CONVOY'],RN['CARGO'],count=2,hp=6,fre=3),
-  step(EMPTY,800,0,-900,RN['VOICE'],RN['HOME'],wait=240),
+ [step(EMPTY,-800,100,500,RN['EMPTY'],0,wait=120),
+  step(FIGHT,600,-80,700,RN['TALLY'],RN['CLEAR'],count=2,hp=4),
+  step(FIGHT,1000,60,-300,RN['CONVOY'],RN['CARGO'],count=2,hp=6,fre=3,limit=LIMIT_M2),
+  step(EMPTY,300,0,-1300,RN['VOICE'],RN['HOME'],wait=240),
+  step(LAND,*VIGIL,RN['LAND'],0)],
+ [step(FIGHT,600,150,700,RN['BUOY'],RN['BUOYDEAD'],count=1,hp=5,fre=HOLD|1),
+  step(AMBUSH,600,150,700,RN['TBEHIND'],RN['TNEXT'],count=2,hp=4,wait=200),
+  step(FIGHT,-800,-80,400,RN['TALLY'],RN['CLEAR'],count=2,hp=4),
+  step(LAND,*VIGIL,RN['LAND'],0)],
+ # 4A Open Channel: escort Ren's shuttle; no Hale
+ [step(DEFEND,-900,60,600,RN['R_LISTEN'],RN['R_OURS'],count=2,hp=3,wait=RN['R_MORE'],limit=21),
+  step(AMBUSH,-900,60,600,RN['R_BEHIND'],RN['R_HOME'],count=2,hp=3,wait=150),
+  step(LAND,*VIGIL,RN['LAND'],0)],
+ # 4B Standing Orders: Mara on your wing, the first lancer, the listening post
+ [step(EMPTY,-700,80,500,RN['M_QUIET'],0,wait=150),
+  step(FIGHT,500,-60,700,RN['M_LANCER'],RN['M_POSTAHEAD'],count=2,hp=4,fre=LANCER0),
+  step(FIGHT,1000,100,-200,RN['M_POST'],RN['T_FLY'],count=1,hp=12,fre=HOLD|BIG|1),
+  step(LAND,*VIGIL,RN['LAND'],0)],
+ # 5 Old Habits: a scout on Hale's tail, then the echo drone
+ [step(FIGHT,700,0,600,RN['TALLY'],RN['CLEAR'],count=2,hp=4),
+  step(GUARD,-300,100,900,RN['ONTAIL'],RN['CLEAR'],count=2,hp=4,limit=7),
+  step(FIGHT,-900,40,200,RN['ECHOCONTACT'],RN['HOME'],count=1,hp=6,fre=ECHO),
+  step(LAND,*VIGIL,RN['LAND'],0)],
+ # 6 The Ledger: the Ashgrove wreck; defend it two minutes while Ren copies
+ [step(EMPTY,*WRECK,RN['ASH'],0,wait=90),
+  step(DEFEND,*WRECK,RN['DOCKED'],RN['YOURFILE'],count=2,hp=4,wait=RN['ORDERS'],fre=PROTECT|LANCER0,limit=26),
   step(LAND,*VIGIL,RN['LAND'],0)]]
+MODES=[0,0,0,0,2,1,0,0]
+o.write('wreckTab: .byte 0,0,0,0,0,0,0,1\n')
+o.write(f'WRECK_X={WRECK[0]}\nWRECK_Y={WRECK[1]}\nWRECK_Z={WRECK[2]}\n')   # 0 Hale on your wing, 1 Mara, 2 Ren's shuttle and no wingman
+o.write('missionModeTab: .byte '+','.join(map(str,MODES))+'\n')
+# per-mode versions of the wingman's lines; 0 = nobody says it
+MARA={'ASH':'M_ASH','ECHOSTOP':'M_ECHOSTOP','HIGHLEFT':'M_HIGHLEFT','THATSHER':'M_THATSHER','ECHODN':'M_ECHODN','ECHOCONTACT':'M_ECHOCONTACT','THANKS':None,'HURRY':None,'HALEHIT':None,'ONTAIL':None,'WING':'M_WING','GOOD':'M_GOOD','ONE':'M_ONE','BOLT':'M_BOLT','HALE_HIT':'M_HIT','LOW':'M_LOW','HOME':'M_HOME','LANCERDN':'M_LANCERDN','HAULER':None,'TALLY':None,'CLEAR':None}
+REN={'WING':'R_WING','GOOD':None,'ONE':'R_ONE','BOLT':'R_BOLT','HALE_HIT':None,'LOW':'R_LOW','HOME':'R_HOME','LANCERDN':None,'HAULER':None,'TALLY':None,'CLEAR':None}
+# alone, after Hale is lost: his lines go quiet; the Vigil speaks for a few
+SOLO={n:None for n,t in RL if t.startswith('HALE:')}
+SOLO.update({'ASH':'M_ASH','ECHOSTOP':'V_ECHOSTOP','THATSHER':'V_THATSHER','HOME':'V_HOME'})
+for nm,mp in (('radioMara',MARA),('radioRen',REN),('radioSolo',SOLO)):
+    row=[0]+[ (RN[mp[n]] if mp[n] else 0) if n in mp else i+1 for i,(n,_) in enumerate(RL)]
+    tab(nm,row)
+for m in MISSIONS:
+    for s in m:
+        x=s[1]|s[2]<<8; y=s[3]|s[4]<<8; z=s[5]|s[6]<<8
+        sx=lambda v:v-65536 if v>32767 else v
+        assert all(abs(sx(a)-b)<=1400 for a,b in zip((x,y,z),VIGIL)),s
 for i,m in enumerate(MISSIONS):
     o.write(f'mission{i+1}:\n')
     for s in m: o.write('  .byte '+','.join(str(v) for v in s)+'\n')
 o.write('missionLo: .byte 0,'+','.join(f'<mission{i+1}' for i in range(len(MISSIONS)))+'\n')
 o.write('missionHi: .byte 0,'+','.join(f'>mission{i+1}' for i in range(len(MISSIONS)))+'\n')
 o.write(f'VIGIL_X={VIGIL[0]}\nVIGIL_Y={VIGIL[1]}\nVIGIL_Z={VIGIL[2]}\n')
-o.write(f'NV={len(V)}\nNF={len(F)}\nNE={len(E)}\nNV2={len(V2)}\nNF2={len(F2)}\nNE2={len(E2)}\nNV3={len(V3)}\nNF3={len(F3)}\nNE3={len(E3)}\n')
-VA=V+V2+V3; tab('vxu',[(v[0]&255)^0x80 for v in VA]); tab('vyu',[(v[1]&255)^0x80 for v in VA]); tab('vzu',[(v[2]&255)^0x80 for v in VA])
-FA=F+[[i+10 for i in f] for f in F2]+[[i+15 for i in f] for f in F3]; tab('fa',[f[0] for f in FA]); tab('fb',[f[1] for f in FA]); tab('fc',[f[2] for f in FA])
+o.write(f'NV={len(V)}\nNF={len(F)}\nNE={len(E)}\nNV2={len(V2)}\nNF2={len(F2)}\nNE2={len(E2)}\nNV3={len(V3)}\nNF3={len(F3)}\nNE3={len(E3)}\nNV4={len(V4)}\nNF4={len(F4)}\nNE4={len(E4)}\n')
+VA=V+V2+V3+V4; tab('vxu',[(v[0]&255)^0x80 for v in VA]); tab('vyu',[(v[1]&255)^0x80 for v in VA]); tab('vzu',[(v[2]&255)^0x80 for v in VA])
+FA=F+[[i+10 for i in f] for f in F2]+[[i+15 for i in f] for f in F3]+[[i+23 for i in f] for f in F4]; tab('fa',[f[0] for f in FA]); tab('fb',[f[1] for f in FA]); tab('fc',[f[2] for f in FA])
 def unit(f):
     n=cross(sub(VA[f[1]],VA[f[0]]),sub(VA[f[2]],VA[f[0]])); l=math.sqrt(dot(n,n)); return tuple(c/l for c in n)
 N=[unit(f) for f in FA]
 tab('nxu',[(round(127*n[0])&255)^0x80 for n in N]); tab('nyu',[(round(127*n[1])&255)^0x80 for n in N]); tab('nzu',[(round(127*n[2])&255)^0x80 for n in N])
 tab('fd',[round(dot(n,VA[f[0]])) for n,f in zip(N,FA)])
-ks=list(E); ks2=list(E2); ks3=list(E3); tab('ea',[k[0] for k in ks]+[k[0]+10 for k in ks2]+[k[0]+15 for k in ks3]); tab('eb',[k[1] for k in ks]+[k[1]+10 for k in ks2]+[k[1]+15 for k in ks3]); tab('emask',[E[k] for k in ks]+[E2[k] for k in ks2]+[E3[k] for k in ks3])
+ks=list(E); ks2=list(E2); ks3=list(E3); ks4=list(E4); tab('ea',[k[0] for k in ks]+[k[0]+10 for k in ks2]+[k[0]+15 for k in ks3]+[k[0]+23 for k in ks4]); tab('eb',[k[1] for k in ks]+[k[1]+10 for k in ks2]+[k[1]+15 for k in ks3]+[k[1]+23 for k in ks4]); tab('emask',[E[k] for k in ks]+[E2[k] for k in ks2]+[E3[k] for k in ks3]+[E4[k] for k in ks4])
 print('radius',round(R,1),'verts',V)
 
 # ---- line-drawing blocks: one code block per pixel row of a tile ----

@@ -398,6 +398,15 @@ cursor:
   bne :+
   lda saveArea+4       ; LOAD
   sta storyFlags
+  lda saveArea+6       ; older saves have no second flags byte
+  eor #$A5
+  cmp saveArea+7
+  beq haveF2
+  lda #0
+  sta saveArea+6
+haveF2:
+  lda saveArea+6
+  sta storyFlags2
   lda saveArea+3
   asl a
   adc saveArea+3
@@ -453,9 +462,59 @@ cursor:
   sta textP+1
   jmp story_loop
 :
+  cmp #15
+  bne :++
+  lda storyFlags       ; LOST: one more spare fighter gone, kept in bits 5-7
+  cmp #(SPARE_START*32)
+  bcs :+
+  adc #32
+  sta storyFlags
+:
+  jmp story_loop
+:
+  cmp #16
+  bne :+
+  lda storyFlags       ; SPARE: print the spare fighters left as a digit
+  lsr a
+  lsr a
+  lsr a
+  lsr a
+  lsr a
+  sta spad0
+  lda #SPARE_START+'0'
+  sec
+  sbc spad0
+  jsr put_char
+  jmp story_loop
+:
+  cmp #17
+  bne :+
+  jsr next_byte        ; FLAG2 bits
+  ora storyFlags2
+  sta storyFlags2
+  jmp story_loop
+:
+  cmp #18
+  bne :++
+  jsr next_byte        ; IF2 flag, scene
+  sta spad0
+  jsr next_byte
+  sta sTargA
+  jsr next_byte
+  sta sTargA+1
+  lda storyFlags2
+  and spad0
+  beq :+
+  lda sTargA
+  sta textP
+  lda sTargA+1
+  sta textP+1
+: jmp story_loop
+:
   cmp #12
   bne :+
   lda #0               ; CLEAR flags
+  sta storyFlags2
   sta storyFlags
   jmp story_loop
 :
@@ -515,6 +574,10 @@ write_save:
   sta saveArea+2
   jsr save_sum
   sta saveArea+5
+  lda storyFlags2
+  sta saveArea+6
+  eor #$A5
+  sta saveArea+7
   rts
 
 ; Chooses the scene that Start opens.
@@ -537,7 +600,7 @@ pick_start:
   cmp #1
   bne :+
   lda saveArea+3
-  cmp #2               ; resume points in saveTab
+  cmp #6               ; resume points in saveTab
   bcs :+
   jsr save_sum
   cmp saveArea+5

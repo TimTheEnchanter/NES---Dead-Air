@@ -12,7 +12,9 @@ for m in re.finditer(r'\b(jsr|jmp|lda|sta|ldx|ldy|adc|cmp|inc|dec)\s+([A-Za-z_][
     if n in L and 0xA000<=L[n]<0xC000: bad.add((m.group(1),n))
 # new_game runs after flight_reset maps the flight bank; the story tables load while
 # the assets bank is mapped; the rest are local labels that share a name.
-ok={'new_game','storyAttr','storyMisc','advance','done','top'}
+# radioText: radio_tick only reads it after a line is requested, which only
+# flight code does, while the flight bank is mapped.
+ok={'new_game','storyAttr','storyMisc','advance','done','top','radioText','radioT0','radioT1','radioT2','radioT3','radioT4'}
 left=sorted(x for x in bad if x[1] not in ok)
 print('unsafe references from always-mapped code:',left)
 sys.exit(1 if left else 0)

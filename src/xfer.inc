@@ -34,7 +34,7 @@ takeJob:
 go:
   lda xfState
   cmp #ST_FLIP
-  beq exit
+  bcs exit             ; FLIP or ATTR: same cycles either way
   lda bud+1            ; need room for a chunk's charge plus one item, or a
   cmp #2               ; charge with no upload would start the picture early
   bcc exit
@@ -139,11 +139,14 @@ nextState:
   jmp top
 :
   cmp #ST_NEW
-  bne :+
+  bne endClear
   lda #ST_FLIP
-  sta xfState
+  ldx tintSend         ; tinted squares go first, written below the picture
+  beq :+
+  lda #ST_ATTR
+: sta xfState
   rts
-:
+endClear:
   ; end of ST_CLEAR
   lda #ST_IDLE
   sta xfState
